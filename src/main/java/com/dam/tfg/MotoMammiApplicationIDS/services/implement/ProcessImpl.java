@@ -24,6 +24,8 @@ public class ProcessImpl implements ProcessService{
         Session session = sessionFactory.openSession();
         session.beginTransaction();
 
+        
+
         session.getTransaction().commit();
         session.close();
     }
