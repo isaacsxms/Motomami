@@ -1,5 +1,7 @@
 package com.dam.tfg.MotoMammiApplicationIDS.services.implement;
 
+import java.util.Date;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -12,8 +14,8 @@ import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 @Component
 public class ProcessImpl implements ProcessService{
     @Override
-    public void readFileInfo(String source) {
-        System.out.println(source);
+    public void readFileInfo(String p_source, String p_prov, Date p_date) {
+        System.out.println(p_source);
         // call to database
         SessionFactory sessionFactory;
 
@@ -23,6 +25,7 @@ public class ProcessImpl implements ProcessService{
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
         Session session = sessionFactory.openSession();
         session.beginTransaction();
+
 
         
 

@@ -16,13 +16,30 @@ public class ReadInfoTask {
     @Autowired
     private ProcessService ps;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    //Date date1 = dateFormat.parse("2013-07-17");
 
-    @Scheduled(cron = "${cron.time.schedule}" )
+    @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoCustomers() {
         try {
-            System.out.println("Hello World!");
-            ps.readFileInfo(Constantes.C_CUSTOMERS);
+            System.out.println("Reading Customer info!");
+            ps.readFileInfo(Constantes.C_CUSTOMERS, "", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Scheduled(cron = "${cron.time.schedule}")
+    public void readInfoVehicle() {
+        try {
+            System.out.println("Reading Vehicle info");
+            ps.readFileInfo(Constantes.C_VEHICLES, "", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Scheduled(cron = "${cron.time.schedule}")
+    public void readInfoParts() {
+        try {
+            System.out.println("Reading Parts info");
+            ps.readFileInfo(Constantes.C_PARTS, "", null);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -13,9 +13,9 @@ public class App {
 	public static void main(String[] args) {
 		SpringApplication.run(App.class, args);
 
-		// ReadInfoTask mm = new ReadInfoTask();
+		ReadInfoTask mm = new ReadInfoTask();
 
-		// mm.reportMessage();
+		mm.readInfoCustomers();
 	}
 
 }
