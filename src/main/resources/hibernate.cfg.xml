@@ -9,10 +9,7 @@
     <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>
     <property name="hibernate.show_sql">true</property>
 
-  <!-- Add ORM classes to map-->
-  <mapping class="src\main\java\com\dam\tfg\MotoMammiApplicationIDS\model\ProviderDTO.java" />
-  <!-- <mapping class="src\main\java\com\dam\tfg\MotoMammiApplicationIDS\model\DireccionDTO.java" /> -->
-  
+    <mapping class="com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO" />
 
   </session-factory>
 </hibernate-configuration>

@@ -1,32 +1,31 @@
 package com.dam.tfg.MotoMammiApplicationIDS.Task;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
-import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
+import com.dam.tfg.MotoMammiApplicationIDS.services.implement.ProcessImpl;
 
 @Component
 public class ReadInfoTask {
 
     @Autowired
-    private ProcessService ps;
+    private ProcessImpl processImpl = new ProcessImpl();
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoCustomers() {
         try {
             System.out.println("Reading Customer info!");
-            ps.readFileInfo(Constantes.C_CUSTOMERS, "", null);
+            processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    @Scheduled(cron = "${cron.time.schedule}")
+/*     @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoVehicle() {
         try {
             System.out.println("Reading Vehicle info");
@@ -43,5 +42,5 @@ public class ReadInfoTask {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    } */
 }

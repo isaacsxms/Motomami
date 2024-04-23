@@ -7,9 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "MM_PROVIDERS")
+@Entity(name = "MM_PROVIDERS")
+@Table
 public class ProviderDTO {
+    
     @Id
     @Column(name = "id")
     private int id;
@@ -77,6 +78,7 @@ public class ProviderDTO {
         this.active = active;
     }
 
+    public ProviderDTO() {};
     public ProviderDTO(int id, String providerCode, String providerName, Date initializeDate, Date endDate,
             boolean active) {
         this.id = id;
@@ -85,5 +87,11 @@ public class ProviderDTO {
         this.initializeDate = initializeDate;
         this.endDate = endDate;
         this.active = active;
+    };
+    
+    @Override
+    public String toString() {
+        return "ProviderDTO [id=" + id + ", providerCode=" + providerCode + ", providerName=" + providerName
+                + ", initializeDate=" + initializeDate + ", endDate=" + endDate + ", active=" + active + "]";
     }
 }
