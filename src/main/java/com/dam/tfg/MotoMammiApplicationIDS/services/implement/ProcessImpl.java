@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
+import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 
@@ -50,6 +52,7 @@ public class ProcessImpl implements ProcessService{
         String findPartsFile = null;
         ArrayList<String> files = new ArrayList<>();
 
+        ArrayList<CustomerDTO> customerList = new ArrayList<>();
         for (ProviderDTO activeSource : activeSources) {
             providerCode = activeSource.getProviderCode();
                 findCustomersFile = resource + customersNameFile + providerCode + "_" + formattedDate + ".dat";
@@ -68,8 +71,20 @@ public class ProcessImpl implements ProcessService{
                         br.readLine(); // skip first line (column names)
                         while ((line = br.readLine()) != null) {
                             System.out.println("Reading file " + file + ": \n" + line + "\n");
-                            
+                            // we read from file we have to convert to objects and insert into interface
+                            String[] customer = line.split(";");
+                            Date birthDate = null;
+                            try {
+                                birthDate = dateFormat.parse(customer[5]);
+                            } catch (ParseException e) {
+                                System.err.println("Error Parsing birth date: " + birthDate + "\n" + e.getCause());
+                            }
+                            char gender = customer[11].charAt(0);
+                            CustomerDTO newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
+
+                            customerList.add(newCustomerDTO);
                         }
+                        System.out.println("Full List: " + customerList.toString());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

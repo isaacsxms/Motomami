@@ -14,6 +14,9 @@ public class CustomerDTO {
     @Column(name = "id")
     private int id;
 
+    @Column(name = "dni")
+    private String dni;
+
     @Column(name = "name")
     private String name;
 
@@ -53,6 +56,14 @@ public class CustomerDTO {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getDni() {
+        return dni;
+    }
+
+    public void setDni(String dni) {
+        this.dni = dni;
     }
 
     public String getName() {
@@ -143,10 +154,11 @@ public class CustomerDTO {
         this.gender = gender;
     }
 
-    public CustomerDTO(int id, String name, String firstSurname, String secondSurname, String email, Date birthDate,
+    public CustomerDTO(int id, String dni, String name, String firstSurname, String secondSurname, String email, Date birthDate,
             String postalCode, String streetType, String customerCity, String streetNumber, String telephone,
             char gender) {
         this.id = id;
+        this.dni = dni;
         this.name = name;
         this.firstSurname = firstSurname;
         this.secondSurname = secondSurname;
@@ -159,4 +171,12 @@ public class CustomerDTO {
         this.telephone = telephone;
         this.gender = gender;
     }  
+
+    @Override
+    public String toString() {
+        return "CustomerDTO [id=" + id + ", name=" + name + ", firstSurname=" + firstSurname + ", secondSurname="
+                + secondSurname + ", email=" + email + ", birthDate=" + birthDate + ", postalCode=" + postalCode
+                + ", streetType=" + streetType + ", customerCity=" + customerCity + ", streetNumber=" + streetNumber
+                + ", telephone=" + telephone + ", gender=" + gender + "]";
+    }
 }
