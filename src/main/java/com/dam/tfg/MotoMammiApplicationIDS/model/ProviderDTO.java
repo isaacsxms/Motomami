@@ -22,10 +22,10 @@ public class ProviderDTO {
     private String providerName;
 
     @Column(name = "date_ini")
-    private Date initializeDate = new Date();
+    private Date initializeDate;
 
     @Column(name = "date_end")
-    private Date endDate = new Date();
+    private Date endDate;
 
     @Column(name = "swiact")
     private boolean active;
@@ -79,6 +79,7 @@ public class ProviderDTO {
     }
 
     public ProviderDTO() {};
+    
     public ProviderDTO(int id, String providerCode, String providerName, Date initializeDate, Date endDate,
             boolean active) {
         this.id = id;

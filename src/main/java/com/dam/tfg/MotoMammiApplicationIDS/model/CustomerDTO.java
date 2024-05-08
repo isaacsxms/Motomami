@@ -30,7 +30,7 @@ public class CustomerDTO {
     private String email;
     
     @Column(name = "birth_date")
-    private Date birthDate = new Date();
+    private Date birthDate;
 
     @Column(name = "postal_code")
     private String postalCode;
@@ -154,6 +154,8 @@ public class CustomerDTO {
         this.gender = gender;
     }
 
+    public CustomerDTO(){};
+    
     public CustomerDTO(int id, String dni, String name, String firstSurname, String secondSurname, String email, Date birthDate,
             String postalCode, String streetType, String customerCity, String streetNumber, String telephone,
             char gender) {

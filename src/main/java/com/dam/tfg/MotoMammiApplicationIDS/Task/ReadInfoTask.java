@@ -1,5 +1,6 @@
 package com.dam.tfg.MotoMammiApplicationIDS.Task;
 
+import java.sql.Date;
 import java.text.SimpleDateFormat;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,13 @@ public class ReadInfoTask {
     @Autowired
     private ProcessImpl processImpl = new ProcessImpl();
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+    //Date p_Date = new Date(124-3-30);
+    
     @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoCustomers() {
         try {
             System.out.println("Reading Customer info!");
-            processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
+            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }

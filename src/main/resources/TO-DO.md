@@ -1,0 +1,12 @@
+# TO-DO
+
+## ENDPOINT = "localhost::8080/readInfo/{resource}/{codprov}/{date}"
+
+### - NUMERO DE LINEAS DEL FICHERO
+
+### - NUMERO DE LINEAS INSERTADAS
+
+### - NUMERO DE LINEAS ACTUALIZADAS
+
+### - NUMERO DE LINEAS CON ERROR
+

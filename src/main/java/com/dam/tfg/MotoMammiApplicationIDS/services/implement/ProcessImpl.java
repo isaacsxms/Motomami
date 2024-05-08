@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,44 +27,71 @@ public class ProcessImpl implements ProcessService{
     private String vehiclesNameFile;
     @Value("${path.file.parts.name}")
     private String partsNameFile;
+    @Value("${path.resources.input}")
+    private String resource;
 
     @Override
-    public void readFileInfo(String p_source, String p_prov, Date p_date) {
+    public void readFileInfo(String p_source, String p_prov, String p_date) {
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
 
-        String resource = "src/main/resources/in/";
         
         // Check if active and date in between initialized and end provider date.
-        String getActiveSources = "FROM MM_PROVIDERS WHERE active = TRUE AND COALESCE(:p_date, CURRENT_DATE()) BETWEEN initializeDate AND COALESCE(endDate, '2099-12-30')";
-        List<ProviderDTO> activeSources = HibernateUtil.getCurrentSession().createQuery(getActiveSources).setParameter("p_date", p_date).list();
 
-        String providerCode = null;
+        //String getActiveSources = "FROM MM_PROVIDERS WHERE active = TRUE AND COALESCE(:p_date, CURRENT_DATE()) BETWEEN initializeDate AND COALESCE(endDate, '2099-12-30')";
+        //List<ProviderDTO> activeSources = HibernateUtil.getCurrentSession().createQuery(getActiveSources).setParameter("p_date", p_date).list();
 
-        // initialize date if null, just like in query
-        if (p_date == null) {
-            p_date = new Date();
+        List<ProviderDTO> activeSources = null;
+
+        try {
+            
+        activeSources = HibernateUtil.getCurrentSession().createQuery("FROM MM_PROVIDERS where active = 1 "+
+        "and ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "+
+        "and providerCode = ifnull(:p_prov, providerCode)",ProviderDTO.class)
+        //.setParameter("p_prov", p_prov)
+        //.setParameter("p_date", p_date)
+        .setParameter("p_prov", null)
+        .setParameter("p_date", null)
+        .list();
+
+
+        System.out.println("Active sources: " + activeSources.toString());
+        } catch(Exception e) {
+            System.err.println("ERROR: Encountered on active users query-> " + e.getMessage());
         }
+        
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String formattedDate = dateFormat.format(p_date);
+         String providerCode = null;
+
+         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");;
+         if (p_date == null) {
+            Date date = new Date();
+            try{
+                p_date = dateFormat.format(date);
+            } catch (Exception e) {
+                System.err.println("ERROR: Error formatting date -> " + e.getMessage());
+            }
+            System.out.println(p_date);
+        }
+        
         String findCustomersFile = null;
         String findVehiclesFile = null;
         String findPartsFile = null;
         ArrayList<String> files = new ArrayList<>();
-
+        
         ArrayList<CustomerDTO> customerList = new ArrayList<>();
         for (ProviderDTO activeSource : activeSources) {
             providerCode = activeSource.getProviderCode();
-                findCustomersFile = resource + customersNameFile + providerCode + "_" + formattedDate + ".dat";
-                findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + formattedDate + ".dat";
-                findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate + ".dat";
+                findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
+                //findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + formattedDate + ".dat";
+                //findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate + ".dat";
 
                 files.add(findCustomersFile);
                 //files.add(findVehiclesFile);
                 //files.add(findPartsFile);
 
             for (String file : files) {
+                System.out.println("File reading: " + file);
                 try {
                     BufferedReader br = new BufferedReader(new FileReader(file));
                     String line;
@@ -76,9 +104,11 @@ public class ProcessImpl implements ProcessService{
                             Date birthDate = null;
                             try {
                                 birthDate = dateFormat.parse(customer[5]);
+                                System.out.println("Birthdate parsed correctly: " + birthDate);
                             } catch (ParseException e) {
                                 System.err.println("Error Parsing birth date: " + birthDate + "\n" + e.getCause());
                             }
+                            System.out.println(birthDate);
                             char gender = customer[11].charAt(0);
                             CustomerDTO newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
 
@@ -86,6 +116,7 @@ public class ProcessImpl implements ProcessService{
                         }
                         System.out.println("Full List: " + customerList.toString());
                     } catch (IOException e) {
+                        System.err.println("ERROR: Reading file... " + e.getMessage());
                         e.printStackTrace();
                     }
                 } catch (FileNotFoundException e) {
