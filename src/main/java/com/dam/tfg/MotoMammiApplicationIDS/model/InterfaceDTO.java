@@ -16,7 +16,10 @@ public class InterfaceDTO {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "cod_ext")
+    @Column(name = "int_code")
+    private String internalCode;
+
+    @Column(name = "ext_code")
     private String externalCode;
 
     @Column(name = "cod_prov")
@@ -60,6 +63,14 @@ public class InterfaceDTO {
         this.id = id;
     }
 
+    public String getInternalCode() {
+        return internalCode;
+    }
+
+    public void seInternalCode(String internalCode) {
+        this.internalCode = internalCode;
+    }
+    
     public String getExternalCode() {
         return externalCode;
     }
@@ -174,5 +185,14 @@ public class InterfaceDTO {
         this.statusProcess = statusProcess;
         this.operation = operation;
         this.resources = resources;
+    }
+
+    @Override
+    public String toString() {
+        return "InterfaceDTO [id=" + id + ", externalCode=" + externalCode + ", providerCode=" + providerCode
+                + ", jsonContent=" + jsonContent + ", creationDate=" + creationDate + ", lastUpdated=" + lastUpdated
+                + ", createdBy=" + createdBy + ", updatedBy=" + updatedBy + ", errorCode=" + errorCode
+                + ", errorMessage=" + errorMessage + ", statusProcess=" + statusProcess + ", operation=" + operation
+                + ", resources=" + resources + "]";
     };
 }

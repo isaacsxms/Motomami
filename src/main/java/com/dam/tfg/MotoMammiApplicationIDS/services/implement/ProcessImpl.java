@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,8 +15,10 @@ import org.springframework.stereotype.Component;
 
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
+import com.google.gson.Gson;
 
 @Component
 public class ProcessImpl implements ProcessService{
@@ -37,10 +38,6 @@ public class ProcessImpl implements ProcessService{
 
         
         // Check if active and date in between initialized and end provider date.
-
-        //String getActiveSources = "FROM MM_PROVIDERS WHERE active = TRUE AND COALESCE(:p_date, CURRENT_DATE()) BETWEEN initializeDate AND COALESCE(endDate, '2099-12-30')";
-        //List<ProviderDTO> activeSources = HibernateUtil.getCurrentSession().createQuery(getActiveSources).setParameter("p_date", p_date).list();
-
         List<ProviderDTO> activeSources = null;
 
         try {
@@ -48,10 +45,8 @@ public class ProcessImpl implements ProcessService{
         activeSources = HibernateUtil.getCurrentSession().createQuery("FROM MM_PROVIDERS where active = 1 "+
         "and ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "+
         "and providerCode = ifnull(:p_prov, providerCode)",ProviderDTO.class)
-        //.setParameter("p_prov", p_prov)
-        //.setParameter("p_date", p_date)
-        .setParameter("p_prov", null)
-        .setParameter("p_date", null)
+        .setParameter("p_prov", p_prov)
+        .setParameter("p_date", p_date)
         .list();
 
 
@@ -75,14 +70,15 @@ public class ProcessImpl implements ProcessService{
         }
         
         String findCustomersFile = null;
-        String findVehiclesFile = null;
-        String findPartsFile = null;
+        //String findVehiclesFile = null;
+        //String findPartsFile = null;
         ArrayList<String> files = new ArrayList<>();
         
         ArrayList<CustomerDTO> customerList = new ArrayList<>();
         for (ProviderDTO activeSource : activeSources) {
             providerCode = activeSource.getProviderCode();
                 findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
+                System.out.println("resource"+ resource + "customersNameFile" +customersNameFile );
                 //findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + formattedDate + ".dat";
                 //findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate + ".dat";
 
@@ -113,6 +109,31 @@ public class ProcessImpl implements ProcessService{
                             CustomerDTO newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
 
                             customerList.add(newCustomerDTO);
+
+                            // TURN TO JSON
+                            String jsonCustomer = new Gson().toJson(newCustomerDTO);
+
+                            System.out.println("Json customer: " + jsonCustomer);
+
+                            // check if dni exists and if content json exists
+                            // if dni and cont json are the same we don't do anything
+                            // if dni is the same but json is different we insert an update in interface
+                            // if none of the above are the same we insert a new interface
+                            String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
+                            List<InterfaceDTO> existingRecords = HibernateUtil.getCurrentSession()
+                            .createQuery(checkDniQuery, InterfaceDTO.class)
+                            .setParameter("dni", newCustomerDTO.getDni())
+                            .list();
+
+                            System.out.println("Existing users" + existingRecords);
+
+                            boolean recordExists = false;
+                            for (InterfaceDTO record : existingRecords) {
+                                /* if (record.getJsonContent().equals(newCustomerDTO.toJson())) {
+                                    recordExists = true;
+                                    break;
+                                } */
+                            }
                         }
                         System.out.println("Full List: " + customerList.toString());
                     } catch (IOException e) {

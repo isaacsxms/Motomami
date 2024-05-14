@@ -32,7 +32,6 @@ public class Controller
         }
         System.out.println("El valor de resource es: " + resource);
 
-        
 
         return "Buenos dias"; // here return the data in TO-DO.txt file
     }

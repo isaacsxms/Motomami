@@ -22,7 +22,7 @@ public class ReadInfoTask {
     public void readInfoCustomers() {
         try {
             System.out.println("Reading Customer info!");
-            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
+            processImpl.readFileInfo(Constantes.C_CUSTOMERS, "CAX", null);
         } catch (Exception e) {
             e.printStackTrace();
         }
