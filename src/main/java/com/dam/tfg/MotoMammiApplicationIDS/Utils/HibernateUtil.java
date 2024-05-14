@@ -5,6 +5,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
@@ -13,6 +14,8 @@ public class HibernateUtil {
 
     private static SessionFactory sessionFactory;
     private static Session session;
+    private static Transaction transaction;
+
 
     /**
      * Crea la factoria de sesiones
@@ -49,6 +52,33 @@ public class HibernateUtil {
             openSession();
 
         return session;
+    }
+
+    /**
+     * Inicia una transacción
+     */
+    public static synchronized void beginTransaction() {
+        if (transaction == null || !transaction.isActive()) {
+            transaction = session.beginTransaction();
+        }
+    }
+
+    /**
+     * Confirma una transacción
+     */
+    public static synchronized void commitTransaction() {
+        if (transaction != null && transaction.isActive()) {
+            transaction.commit();
+        }
+    }
+
+    /**
+     * Revierte una transacción
+     */
+    public static synchronized void rollbackTransaction() {
+        if (transaction != null && transaction.isActive()) {
+            transaction.rollback();
+        }
     }
 
     /**
