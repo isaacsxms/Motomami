@@ -70,7 +70,7 @@ public class ProcessImpl implements ProcessService{
             System.err.println("ERROR: Encountered on active users query-> " + e.getMessage());
         }
 
-         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");;
+         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
          if (p_date == null) {
             Date date = new Date();
             try{
@@ -81,7 +81,7 @@ public class ProcessImpl implements ProcessService{
             System.out.println(p_date);
         }
         
-        String findCustomersFile = null;
+        
         //String findVehiclesFile = null;
         //String findPartsFile = null;
         ArrayList<String> files = new ArrayList<>();
@@ -89,8 +89,10 @@ public class ProcessImpl implements ProcessService{
         ArrayList<CustomerDTO> customerList = new ArrayList<>();
         try{
         for (ProviderDTO activeSource : activeSources) {
+            
             String providerCode = activeSource.getProviderCode();
-                findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
+            String findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
+            System.out.println( resource + customersNameFile + providerCode + "_" + p_date + ".dat");
                 //findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + formattedDate + ".dat";
                 //findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate + ".dat";
 
@@ -98,6 +100,7 @@ public class ProcessImpl implements ProcessService{
                 //files.add(findVehiclesFile);
                 //files.add(findPartsFile);
 
+                CustomerDTO newCustomerDTO = new CustomerDTO();
             for (String file : files) {
                 System.out.println("File reading: " + file);
                 try {
@@ -115,42 +118,14 @@ public class ProcessImpl implements ProcessService{
                                 System.out.println("Birthdate parsed correctly: " + birthDate);
                             } catch (ParseException e) {
                                 System.err.println("Error Parsing birth date: " + birthDate + "\n" + e.getCause());
-                                continue;
+                                //continue;
                             }
                             System.out.println(birthDate);
                             char gender = customer[11].charAt(0);
-                            CustomerDTO newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
+                            newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
 
                             customerList.add(newCustomerDTO);
                             System.out.println("Full List: " + customerList.toString());
-
-                            // TURN TO JSON
-                            String jsonCustomer = new Gson().toJson(newCustomerDTO);
-
-                            System.out.println("Json customer: " + jsonCustomer);
-
-                            // check if dni exists and if content json exists
-                            // if dni and cont json are the same we don't do anything
-                            // if dni is the same but json is different we insert an update in interface
-                            // if none of the above are the same we insert a new interface
-
-                            String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
-                            List<InterfaceDTO> existingRecords = HibernateUtil.getCurrentSession()
-                            .createQuery(checkDniQuery, InterfaceDTO.class)
-                            .setParameter("dni", newCustomerDTO.getDni())
-                            .list();
-
-                            System.out.println("Existing users" + existingRecords);
-
-                            boolean recordExists = false;
-                            for (InterfaceDTO record : existingRecords) {
-                                /* if (record.getJsonContent().equals(newCustomerDTO.toJson())) {
-                                    recordExists = true;
-                                    break;
-                                } */
-                            }
-                            // commit transactions
-                            HibernateUtil.commitTransaction();
                         }
                     } catch (IOException e) {
                         System.err.println("ERROR: Reading file... " + e.getMessage());
@@ -160,6 +135,30 @@ public class ProcessImpl implements ProcessService{
                     System.err.println("No se encontro el fichero! " + file);
                 }
             }
+
+            // TURN TO JSON
+            ArrayList<String> jsonCustomerList = new ArrayList<>();
+            for (CustomerDTO customer : customerList) {
+                jsonCustomerList.add(new Gson().toJson(customer));
+            }
+
+            System.out.println("JSON: " + jsonCustomerList);
+
+            // check if dni exists and if content json exists
+            // if dni and cont json are the same we don't do anything
+            // if dni is the same but json is different we insert an update in interface
+            // if none of the above are the same we insert a new interface
+
+            String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
+            List<InterfaceDTO> existingRecords = HibernateUtil.getCurrentSession()
+            .createQuery(checkDniQuery, InterfaceDTO.class)
+            .setParameter("dni", newCustomerDTO.getDni())
+            .list();
+
+            System.out.println("Existing users" + existingRecords);
+            
+            // commit transactions
+            HibernateUtil.commitTransaction();
         }} catch(Exception e) {
             
         }       

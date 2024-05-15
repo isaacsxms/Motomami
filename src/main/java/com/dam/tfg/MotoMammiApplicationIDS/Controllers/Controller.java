@@ -24,7 +24,7 @@ public class Controller
                                ){
         try{
             System.out.println("\nEsta tarea se lanza cada 15 segundos");
-            pService.readFileInfo(resource,codprov,date);
+            //pService.readFileInfo(resource,codprov,date);
            
 
         } catch (Exception e){
