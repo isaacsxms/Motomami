@@ -15,10 +15,10 @@ public class ProviderDTO {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "cod_prov")
+    @Column(name = "cod_prov", unique = true, nullable = false)
     private String providerCode;
 
-    @Column(name = "prov_name")
+    @Column(name = "prov_name", nullable = false)
     private String providerName;
 
     @Column(name = "date_ini")

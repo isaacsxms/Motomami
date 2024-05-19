@@ -12,10 +12,5 @@ public class MotoMammiApplicationIDS {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MotoMammiApplicationIDS.class, args);
-
-		ReadInfoTask mm = new ReadInfoTask();
-
-		mm.readInfoCustomers();
 	}
-
 }

@@ -137,25 +137,57 @@ public class ProcessImpl implements ProcessService{
             }
 
             // TURN TO JSON
-            ArrayList<String> jsonCustomerList = new ArrayList<>();
+            //ArrayList<String> jsonCustomerList = new ArrayList<>();
             for (CustomerDTO customer : customerList) {
-                jsonCustomerList.add(new Gson().toJson(customer));
-            }
+                System.out.println("Entered loop!");
+                String jsonContent = new Gson().toJson(customer);
 
-            System.out.println("JSON: " + jsonCustomerList);
+                // Check if the dni exists in InterfaceDTO
+                InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
+                .createQuery("FROM InterfaceDTO WHERE dni = :dni", InterfaceDTO.class)
+                .setParameter("dni", customer.getDni())
+                .uniqueResult();
+
+                System.out.println("STEP 1");
+                if (existingRecord != null) {
+                    System.out.println("STEP 2");
+                    // If dni and content JSON are the same, do nothing
+                    if (existingRecord.getJsonContent().equals(jsonContent)) {
+                        System.out.println("DNI and content JSON are the same. Skipping...");
+                        continue;
+                    } else {
+                        // If dni is the same but JSON is different, update the interface
+                        System.out.println("DNI exists but content JSON is different. Updating...");
+                        existingRecord.setJsonContent(jsonContent);
+                        HibernateUtil.getCurrentSession().update(existingRecord);
+                    }
+                } else {
+                    // If dni doesn't exist, insert a new interface
+                    System.out.println("DNI doesn't exist. Inserting new interface...");
+                    InterfaceDTO newInterface = new InterfaceDTO();
+                    newInterface.setJsonContent(jsonContent);
+                    newInterface.seInternalCode(customer.getDni());
+                    newInterface.setCreationDate(new Date());
+                    newInterface.setLastUpdated(new Date());
+                    newInterface.setProviderCode(p_prov);
+
+                    // Makes no sense to add a provider object just add the prov_cod
+                    //newInterface.setProviderCode(p_prov);
+                    // Set other fields as needed
+                    HibernateUtil.getCurrentSession().save(newInterface);
+                }
+            }
 
             // check if dni exists and if content json exists
             // if dni and cont json are the same we don't do anything
             // if dni is the same but json is different we insert an update in interface
             // if none of the above are the same we insert a new interface
 
-            String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
+            /* String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
             List<InterfaceDTO> existingRecords = HibernateUtil.getCurrentSession()
             .createQuery(checkDniQuery, InterfaceDTO.class)
             .setParameter("dni", newCustomerDTO.getDni())
-            .list();
-
-            System.out.println("Existing users" + existingRecords);
+            .list(); */
             
             // commit transactions
             HibernateUtil.commitTransaction();

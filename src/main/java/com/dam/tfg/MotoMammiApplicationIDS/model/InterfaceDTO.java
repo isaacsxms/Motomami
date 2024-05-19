@@ -3,6 +3,8 @@ package com.dam.tfg.MotoMammiApplicationIDS.model;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.databind.introspect.AccessorNamingStrategy.Provider;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -23,9 +25,6 @@ public class InterfaceDTO {
 
     @Column(name = "ext_code")
     private String externalCode;
-
-    @Column(name = "cod_prov")
-    private String providerCode;
 
     @Column(name = "cont_json")
     private String jsonContent;
@@ -52,14 +51,17 @@ public class InterfaceDTO {
     private char statusProcess;
     
     @Column(name = "operation") // 'NEW' or 'UPD'
-    private char operation;
+    private String operation;
 
     @Column(name = "resources") // 'CUS' or 'VEH' or 'PRT'
-    private char resources;
+    private String resources;
 
-    @ManyToOne
+    @Column(name = "p_prov")
+    private String providerCode;
+   /*  @ManyToOne
     @JoinColumn(name = "cod_prov", referencedColumnName = "cod_prov")
-    private ProviderDTO provider;
+    private ProviderDTO providerCode;
+ */
 
     public int getId() {
         return id;
@@ -157,19 +159,19 @@ public class InterfaceDTO {
         this.statusProcess = statusProcess;
     }
 
-    public char getOperation() {
+    public String getOperation() {
         return operation;
     }
 
-    public void setOperation(char operation) {
+    public void setOperation(String operation) {
         this.operation = operation;
     }
 
-    public char getResources() {
+    public String getResources() {
         return resources;
     }
 
-    public void setResources(char resources) {
+    public void setResources(String resources) {
         this.resources = resources;
     }
 
@@ -177,7 +179,7 @@ public class InterfaceDTO {
 
     public InterfaceDTO(int id, String externalCode, String providerCode, String jsonContent, Date creationDate,
             Date lastUpdated, String createdBy, String updatedBy, String errorCode, String errorMessage,
-            char statusProcess, char operation, char resources) {
+            char statusProcess, String operation, String resources) {
         this.id = id;
         this.externalCode = externalCode;
         this.providerCode = providerCode;
