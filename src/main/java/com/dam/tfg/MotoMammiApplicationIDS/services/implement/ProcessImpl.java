@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -34,27 +35,43 @@ public class ProcessImpl implements ProcessService {
     @Value("${path.resources.input}")
     private String resource;
 
+    private static int numLines = 0;
+    private static int numInserted = 0;
+    private static int numUpdated = 0;
+    private static int numErrors = 0;
+
     @Override
-    public void readFileInfo(String p_source, String p_prov, String p_date) {
+    public HashMap<String, Integer> readFileInfo(String p_source, String p_prov, String p_date) {
+        HashMap<String, Integer> statistics = new HashMap<>();
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
+
+        
+
         // Check if active and date in between initialized and end provider date.
         List<ProviderDTO> activeSources = getActiveSources(p_prov, p_date);
         if (activeSources == null || activeSources.isEmpty()) {
             System.err.println("No active sources found.");
             HibernateUtil.closeSessionFactory();
-            return;
+            return statistics;
         }
 
         p_date = getCurrentDateIfNull(p_date);
 
         List<String> files = getFilePaths(activeSources, p_date);
-        List<CustomerDTO> customerList = processCustomerFiles(files);
+        List<CustomerDTO> customerList = processCustomerFiles(files, statistics);
 
-        processCustomerData(customerList, p_prov);
+        processCustomerData(customerList, p_prov, p_source, statistics);
 
         HibernateUtil.commitTransaction();
         HibernateUtil.closeSessionFactory();
+
+        statistics.put("numLines", numLines);
+        statistics.put("numInserted", numInserted);
+        statistics.put("numUpdated", numUpdated);
+        statistics.put("numErrors", numErrors);
+
+        return statistics;
     }
 
     private List<ProviderDTO> getActiveSources(String p_prov, String p_date) {
@@ -105,7 +122,7 @@ public class ProcessImpl implements ProcessService {
         return files;
     }
 
-    private List<CustomerDTO> processCustomerFiles(List<String> files) {
+    private List<CustomerDTO> processCustomerFiles(List<String> files, HashMap<String, Integer> statistics) {
         List<CustomerDTO> customerList = new ArrayList<>();
         for (String file : files) {
             System.out.println("Reading file: " + file);
@@ -113,6 +130,7 @@ public class ProcessImpl implements ProcessService {
                 br.readLine(); // skip first line (column names)
                 String line;
                 while ((line = br.readLine()) != null) {
+                    numLines++;
                     CustomerDTO customer = parseCustomer(line);
                     if (customer != null) {
                         customerList.add(customer);
@@ -124,6 +142,7 @@ public class ProcessImpl implements ProcessService {
                 System.err.println("ERROR: Reading file... " + e.getMessage());
             }
         }
+        statistics.put("numLines", numLines);
         return customerList;
     }
 
@@ -142,7 +161,7 @@ public class ProcessImpl implements ProcessService {
         return null;
     }
 
-    private void processCustomerData(List<CustomerDTO> customerList, String p_prov) {
+    private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source, HashMap<String, Integer> statistics) {
         for (CustomerDTO customer : customerList) {
             String jsonContent = new Gson().toJson(customer);
             InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
@@ -159,6 +178,7 @@ public class ProcessImpl implements ProcessService {
                         existingRecord.setStatusProcess('P');
                         existingRecord.setOperation("UPD");
                         HibernateUtil.getCurrentSession().update(existingRecord);
+                        numUpdated++;
                     }
                     // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
                 } else {
@@ -170,11 +190,34 @@ public class ProcessImpl implements ProcessService {
                     newInterface.setStatusProcess('P');
                     newInterface.setOperation("NEW");
                     newInterface.setProviderCode(p_prov);
+                    newInterface.setResources(p_source);
                     HibernateUtil.getCurrentSession().save(newInterface);
+                    numInserted++;
                 }
             } catch (Exception e) {
-
+                System.err.println("ERROR INSERTING INTO INTERFACE: " + e.getMessage());
+                if (existingRecord != null) {
+                    existingRecord.setStatusProcess('E');
+                    existingRecord.setOperation("UPD");
+                    HibernateUtil.getCurrentSession().update(existingRecord);
+                } else {
+                    InterfaceDTO errorRecord = new InterfaceDTO();
+                    errorRecord.setJsonContent(jsonContent);
+                    errorRecord.setInternalCode(customer.getDni());
+                    errorRecord.setCreationDate(new Date());
+                    errorRecord.setLastUpdated(new Date());
+                    errorRecord.setStatusProcess('E');
+                    errorRecord.setOperation("NEW");
+                    errorRecord.setProviderCode(p_prov);
+                    errorRecord.setResources(p_source);
+                    errorRecord.setErrorCode("ERR_CODE");
+                    errorRecord.setErrorMessage(e.getMessage());
+                }
+                numErrors++;
             }
         }
+        statistics.put("numInserted", numInserted);
+        statistics.put("numUpdated", numUpdated);
+        statistics.put("numErrors", numErrors);
     }
 }
