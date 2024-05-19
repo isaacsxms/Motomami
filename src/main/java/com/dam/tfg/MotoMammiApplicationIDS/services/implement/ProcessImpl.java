@@ -183,6 +183,19 @@ public class ProcessImpl implements ProcessService {
                     // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
                 } else {
                     InterfaceDTO newInterface = new InterfaceDTO();
+                    switch (p_prov) {
+                        case "CAX":
+                            newInterface.setExternalCode("C-"+ customer.getDni() + "-X");
+                            break;
+                        case "SAN":
+                            newInterface.setExternalCode("S-"+ customer.getDni() + "-N");
+                            break;
+                        case "ING":
+                            newInterface.setExternalCode("I-"+ customer.getDni() + "-G");  
+                            break;
+                        default:
+                            break;
+                    }
                     newInterface.setJsonContent(jsonContent);
                     newInterface.setInternalCode(customer.getDni());
                     newInterface.setCreationDate(new Date());
