@@ -13,7 +13,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 
 @RestController
-public class Controller
+public class T_Controller
 {
     @Autowired
     ProcessService pService;
