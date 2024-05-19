@@ -18,12 +18,13 @@ import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
+import com.fasterxml.jackson.databind.introspect.AccessorNamingStrategy.Provider;
 import com.google.gson.Gson;
 
 import jakarta.annotation.PostConstruct;
 
 @Component
-public class ProcessImpl implements ProcessService{
+public class ProcessImpl implements ProcessService {
     @Value("${path.file.customer.name}")
     private String customersNameFile;
     @Value("${path.file.vehicles.name}")
@@ -33,167 +34,147 @@ public class ProcessImpl implements ProcessService{
     @Value("${path.resources.input}")
     private String resource;
 
-    @PostConstruct
-    public void logProperties() {
-        System.out.println("Resource: " + resource);
-        System.out.println("CustomersNameFile: " + customersNameFile);
-        System.out.println("VehiclesNameFile: " + vehiclesNameFile);
-        System.out.println("PartsNameFile: " + partsNameFile);
-    }
-
     @Override
     public void readFileInfo(String p_source, String p_prov, String p_date) {
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
-
         // Check if active and date in between initialized and end provider date.
-        List<ProviderDTO> activeSources = null;
-
-        try {
-        HibernateUtil.beginTransaction();
-        activeSources = HibernateUtil.getCurrentSession().createQuery("FROM MM_PROVIDERS where active = 1 "+
-        "and ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "+
-        "and providerCode = ifnull(:p_prov, providerCode)",ProviderDTO.class)
-        .setParameter("p_prov", p_prov)
-        .setParameter("p_date", p_date)
-        .list();
-
-
-        System.out.println("Active sources: " + activeSources.toString());
-
-        if (activeSources.isEmpty()) {
+        List<ProviderDTO> activeSources = getActiveSources(p_prov, p_date);
+        if (activeSources == null || activeSources.isEmpty()) {
             System.err.println("No active sources found.");
+            HibernateUtil.closeSessionFactory();
             return;
         }
 
-        } catch(Exception e) {
+        p_date = getCurrentDateIfNull(p_date);
+
+        List<String> files = getFilePaths(activeSources, p_date);
+        List<CustomerDTO> customerList = processCustomerFiles(files);
+
+        processCustomerData(customerList, p_prov);
+
+        HibernateUtil.commitTransaction();
+        HibernateUtil.closeSessionFactory();
+    }
+
+    private List<ProviderDTO> getActiveSources(String p_prov, String p_date) {
+        List<ProviderDTO> activeSources = null;
+        try {
+            HibernateUtil.beginTransaction();
+            activeSources = HibernateUtil.getCurrentSession().createQuery(
+                    "FROM MM_PROVIDERS where active = 1 " +
+                            "and ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "
+                            +
+                            "and providerCode = ifnull(:p_prov, providerCode)",
+                    ProviderDTO.class)
+                    .setParameter("p_prov", p_prov)
+                    .setParameter("p_date", p_date)
+                    .list();
+
+        } catch (Exception e) {
             System.err.println("ERROR: Encountered on active users query-> " + e.getMessage());
         }
+        return activeSources;
+    }
 
-         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-         if (p_date == null) {
-            Date date = new Date();
-            try{
-                p_date = dateFormat.format(date);
-            } catch (Exception e) {
-                System.err.println("ERROR: Error formatting date -> " + e.getMessage());
-            }
-            System.out.println(p_date);
+    private String getCurrentDateIfNull(String p_date) {
+        if (p_date == null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            p_date = dateFormat.format(new Date());
         }
-        
-        
-        //String findVehiclesFile = null;
-        //String findPartsFile = null;
-        ArrayList<String> files = new ArrayList<>();
-        
-        ArrayList<CustomerDTO> customerList = new ArrayList<>();
-        try{
+        return p_date;
+    }
+
+    private List<String> getFilePaths(List<ProviderDTO> activeSources, String p_date) {
+        List<String> files = new ArrayList<>();
         for (ProviderDTO activeSource : activeSources) {
-            
             String providerCode = activeSource.getProviderCode();
             String findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
-            System.out.println( resource + customersNameFile + providerCode + "_" + p_date + ".dat");
-                //findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + formattedDate + ".dat";
-                //findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate + ".dat";
 
-                files.add(findCustomersFile);
-                //files.add(findVehiclesFile);
-                //files.add(findPartsFile);
+            System.out.println("File path: " + findCustomersFile);
 
-                CustomerDTO newCustomerDTO = new CustomerDTO();
-            for (String file : files) {
-                System.out.println("File reading: " + file);
-                try {
-                    BufferedReader br = new BufferedReader(new FileReader(file));
-                    String line;
-                    try {
-                        br.readLine(); // skip first line (column names)
-                        while ((line = br.readLine()) != null) {
-                            System.out.println("Reading file " + file + ": \n" + line + "\n");
-                            // we read from file we have to convert to objects and insert into interface
-                            String[] customer = line.split(";");
-                            Date birthDate = null;
-                            try {
-                                birthDate = dateFormat.parse(customer[5]);
-                                System.out.println("Birthdate parsed correctly: " + birthDate);
-                            } catch (ParseException e) {
-                                System.err.println("Error Parsing birth date: " + birthDate + "\n" + e.getCause());
-                                //continue;
-                            }
-                            System.out.println(birthDate);
-                            char gender = customer[11].charAt(0);
-                            newCustomerDTO = new CustomerDTO(0, customer[0], customer[1], customer[2], customer[3], customer[4], birthDate, customer[6], customer[7], customer[8], customer[9], customer[10], gender);
+            files.add(findCustomersFile);
 
-                            customerList.add(newCustomerDTO);
-                            System.out.println("Full List: " + customerList.toString());
-                        }
-                    } catch (IOException e) {
-                        System.err.println("ERROR: Reading file... " + e.getMessage());
-                        e.printStackTrace();
+            // findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" +
+            // formattedDate + ".dat";
+            // findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate
+            // + ".dat";
+            // files.add(findVehiclesFile)
+            // files.add(findPartsFile)
+        }
+        return files;
+    }
+
+    private List<CustomerDTO> processCustomerFiles(List<String> files) {
+        List<CustomerDTO> customerList = new ArrayList<>();
+        for (String file : files) {
+            System.out.println("Reading file: " + file);
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                br.readLine(); // skip first line (column names)
+                String line;
+                while ((line = br.readLine()) != null) {
+                    CustomerDTO customer = parseCustomer(line);
+                    if (customer != null) {
+                        customerList.add(customer);
                     }
-                } catch (FileNotFoundException e) {
-                    System.err.println("No se encontro el fichero! " + file);
                 }
+            } catch (FileNotFoundException e) {
+                System.err.println("File not found: " + file);
+            } catch (IOException e) {
+                System.err.println("ERROR: Reading file... " + e.getMessage());
             }
+        }
+        return customerList;
+    }
 
-            // TURN TO JSON
-            //ArrayList<String> jsonCustomerList = new ArrayList<>();
-            for (CustomerDTO customer : customerList) {
-                System.out.println("Entered loop!");
-                String jsonContent = new Gson().toJson(customer);
+    private CustomerDTO parseCustomer(String line) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String[] customerData = line.split(";");
+        try {
+            Date birthDate = dateFormat.parse(customerData[5]);
+            char gender = customerData[11].charAt(0);
+            return new CustomerDTO(0, customerData[0], customerData[1], customerData[2], customerData[3],
+                    customerData[4], birthDate, customerData[6], customerData[7],
+                    customerData[8], customerData[9], customerData[10], gender);
+        } catch (ParseException e) {
+            System.err.println("Error Parsing birth date: " + customerData[5] + " -> " + e.getMessage());
+        }
+        return null;
+    }
 
-                // Check if the dni exists in InterfaceDTO
-                InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
-                .createQuery("FROM InterfaceDTO WHERE dni = :dni", InterfaceDTO.class)
-                .setParameter("dni", customer.getDni())
-                .uniqueResult();
+    private void processCustomerData(List<CustomerDTO> customerList, String p_prov) {
+        for (CustomerDTO customer : customerList) {
+            String jsonContent = new Gson().toJson(customer);
+            InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
+                    .createQuery("FROM InterfaceDTO WHERE internalCode = :dni", InterfaceDTO.class)
+                    .setParameter("dni", customer.getDni())
+                    .uniqueResult();
 
-                System.out.println("STEP 1");
+            try {
                 if (existingRecord != null) {
-                    System.out.println("STEP 2");
-                    // If dni and content JSON are the same, do nothing
-                    if (existingRecord.getJsonContent().equals(jsonContent)) {
-                        System.out.println("DNI and content JSON are the same. Skipping...");
-                        continue;
-                    } else {
-                        // If dni is the same but JSON is different, update the interface
-                        System.out.println("DNI exists but content JSON is different. Updating...");
+                    System.out.println("Interface exists!");
+                    if (!existingRecord.getJsonContent().equals(jsonContent)) {
+                        System.out.println("Entered! to update");
                         existingRecord.setJsonContent(jsonContent);
+                        existingRecord.setStatusProcess('P');
+                        existingRecord.setOperation("UPD");
                         HibernateUtil.getCurrentSession().update(existingRecord);
                     }
+                    // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
                 } else {
-                    // If dni doesn't exist, insert a new interface
-                    System.out.println("DNI doesn't exist. Inserting new interface...");
                     InterfaceDTO newInterface = new InterfaceDTO();
                     newInterface.setJsonContent(jsonContent);
-                    newInterface.seInternalCode(customer.getDni());
+                    newInterface.setInternalCode(customer.getDni());
                     newInterface.setCreationDate(new Date());
                     newInterface.setLastUpdated(new Date());
+                    newInterface.setStatusProcess('P');
+                    newInterface.setOperation("NEW");
                     newInterface.setProviderCode(p_prov);
-
-                    // Makes no sense to add a provider object just add the prov_cod
-                    //newInterface.setProviderCode(p_prov);
-                    // Set other fields as needed
                     HibernateUtil.getCurrentSession().save(newInterface);
                 }
+            } catch (Exception e) {
+
             }
-
-            // check if dni exists and if content json exists
-            // if dni and cont json are the same we don't do anything
-            // if dni is the same but json is different we insert an update in interface
-            // if none of the above are the same we insert a new interface
-
-            /* String checkDniQuery = "FROM InterfaceDTO WHERE dni = :dni";
-            List<InterfaceDTO> existingRecords = HibernateUtil.getCurrentSession()
-            .createQuery(checkDniQuery, InterfaceDTO.class)
-            .setParameter("dni", newCustomerDTO.getDni())
-            .list(); */
-            
-            // commit transactions
-            HibernateUtil.commitTransaction();
-        }} catch(Exception e) {
-            
-        }       
-        HibernateUtil.closeSessionFactory();
+        }
     }
 }

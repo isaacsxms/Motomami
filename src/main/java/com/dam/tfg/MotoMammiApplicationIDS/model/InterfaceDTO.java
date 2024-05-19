@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.introspect.AccessorNamingStrategy.Provider
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -18,13 +20,17 @@ import jakarta.persistence.Table;
 public class InterfaceDTO {
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "int_code")
+    @Column(name = "int_cod")
     private String internalCode;
 
-    @Column(name = "ext_code")
+    @Column(name = "ext_cod")
     private String externalCode;
+
+    @Column(name = "cod_prov")
+    private String providerCode;
 
     @Column(name = "cont_json")
     private String jsonContent;
@@ -56,12 +62,10 @@ public class InterfaceDTO {
     @Column(name = "resources") // 'CUS' or 'VEH' or 'PRT'
     private String resources;
 
-    @Column(name = "p_prov")
-    private String providerCode;
-   /*  @ManyToOne
-    @JoinColumn(name = "cod_prov", referencedColumnName = "cod_prov")
-    private ProviderDTO providerCode;
- */
+    
+     @ManyToOne
+    @JoinColumn(name = "cod_prov", referencedColumnName = "cod_prov", insertable = false, updatable = false)
+    private ProviderDTO provider;
 
     public int getId() {
         return id;
@@ -75,7 +79,7 @@ public class InterfaceDTO {
         return internalCode;
     }
 
-    public void seInternalCode(String internalCode) {
+    public void setInternalCode(String internalCode) {
         this.internalCode = internalCode;
     }
     
@@ -175,11 +179,15 @@ public class InterfaceDTO {
         this.resources = resources;
     }
 
+    public void setProvider(ProviderDTO provider) {
+        this.provider = provider;
+    }
+
     public InterfaceDTO(){};
 
     public InterfaceDTO(int id, String externalCode, String providerCode, String jsonContent, Date creationDate,
             Date lastUpdated, String createdBy, String updatedBy, String errorCode, String errorMessage,
-            char statusProcess, String operation, String resources) {
+            char statusProcess, String operation, String resources, ProviderDTO provider) {
         this.id = id;
         this.externalCode = externalCode;
         this.providerCode = providerCode;
@@ -193,6 +201,7 @@ public class InterfaceDTO {
         this.statusProcess = statusProcess;
         this.operation = operation;
         this.resources = resources;
+        this.provider = provider;
     }
 
     @Override
