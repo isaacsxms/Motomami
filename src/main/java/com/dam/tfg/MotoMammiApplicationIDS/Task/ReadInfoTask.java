@@ -1,6 +1,5 @@
 package com.dam.tfg.MotoMammiApplicationIDS.Task;
 
-import java.sql.Date;
 import java.text.SimpleDateFormat;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ public class ReadInfoTask {
     public void readInfoCustomers() {
         try {
             System.out.println("Reading Customer info!");
-            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, "SAN", null);
+            processImpl.readFileInfo(Constantes.C_CUSTOMERS, "SAN", null);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -8,9 +8,9 @@ import com.dam.tfg.MotoMammiApplicationIDS.Task.ReadInfoTask;
 
 @SpringBootApplication
 @EnableScheduling
-public class MotoMammiApplicationIDS {
+public class MotoMamiApplicationIDS {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MotoMammiApplicationIDS.class, args);
+		SpringApplication.run(MotoMamiApplicationIDS.class, args);
 	}
 }

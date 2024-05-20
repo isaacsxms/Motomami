@@ -19,10 +19,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
-import com.fasterxml.jackson.databind.introspect.AccessorNamingStrategy.Provider;
 import com.google.gson.Gson;
-
-import jakarta.annotation.PostConstruct;
 
 @Component
 public class ProcessImpl implements ProcessService {
@@ -34,6 +31,8 @@ public class ProcessImpl implements ProcessService {
     private String partsNameFile;
     @Value("${path.resources.input}")
     private String resource;
+    @Value("${system.username}")
+    private String systemUsername;
 
     private static int numLines = 0;
     private static int numInserted = 0;
@@ -175,7 +174,7 @@ public class ProcessImpl implements ProcessService {
                     if (!existingRecord.getJsonContent().equals(jsonContent)) {
                         System.out.println("Entered! to update");
                         existingRecord.setJsonContent(jsonContent);
-                        existingRecord.setStatusProcess('P');
+                        existingRecord.setUpdatedBy(systemUsername);
                         existingRecord.setOperation("UPD");
                         HibernateUtil.getCurrentSession().update(existingRecord);
                         numUpdated++;
@@ -200,8 +199,9 @@ public class ProcessImpl implements ProcessService {
                     newInterface.setInternalCode(customer.getDni());
                     newInterface.setCreationDate(new Date());
                     newInterface.setLastUpdated(new Date());
-                    newInterface.setStatusProcess('P');
+                    newInterface.setStatusProcess('N'); // STATUS N TILL IT IS SUCCESFULLY INSERTED INTO CUS, VEH or PRT
                     newInterface.setOperation("NEW");
+                    newInterface.setCreatedBy(systemUsername);
                     newInterface.setProviderCode(p_prov);
                     newInterface.setResources(p_source);
                     HibernateUtil.getCurrentSession().save(newInterface);
@@ -233,4 +233,9 @@ public class ProcessImpl implements ProcessService {
         statistics.put("numUpdated", numUpdated);
         statistics.put("numErrors", numErrors);
     }
-}
+
+   /*  public void translations() {
+
+    }
+    */
+} 
