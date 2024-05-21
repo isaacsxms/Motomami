@@ -19,6 +19,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 import com.google.gson.Gson;
 
@@ -45,8 +46,6 @@ public class ProcessImpl implements ProcessService {
         HashMap<String, Integer> statistics = new HashMap<>();
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
-
-        
 
         // Check if active and date in between initialized and end provider date.
         List<ProviderDTO> activeSources = getActiveSources(p_prov, p_date);
@@ -161,7 +160,8 @@ public class ProcessImpl implements ProcessService {
         return null;
     }
 
-    private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source, HashMap<String, Integer> statistics) {
+    private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source,
+            HashMap<String, Integer> statistics) {
         for (CustomerDTO customer : customerList) {
             String jsonContent = new Gson().toJson(customer);
             InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
@@ -185,13 +185,13 @@ public class ProcessImpl implements ProcessService {
                     InterfaceDTO newInterface = new InterfaceDTO();
                     switch (p_prov) {
                         case "CAX":
-                            newInterface.setExternalCode("C-"+ customer.getDni() + "-X");
+                            newInterface.setExternalCode("C-" + customer.getDni() + "-X");
                             break;
                         case "SAN":
-                            newInterface.setExternalCode("S-"+ customer.getDni() + "-N");
+                            newInterface.setExternalCode("S-" + customer.getDni() + "-N");
                             break;
                         case "ING":
-                            newInterface.setExternalCode("I-"+ customer.getDni() + "-G");  
+                            newInterface.setExternalCode("I-" + customer.getDni() + "-G");
                             break;
                         default:
                             break;
@@ -210,67 +210,87 @@ public class ProcessImpl implements ProcessService {
                 }
             } catch (Exception e) {
                 System.err.println("ERROR INSERTING INTO INTERFACE: " + e.getMessage());
+            }
         }
-    }
         statistics.put("numInserted", numInserted);
         statistics.put("numUpdated", numUpdated);
         statistics.put("numErrors", numErrors);
     }
 
     @Override
-    public HashMap<String, Integer> integrateInfo(String p_source, String p_prov, String p_Date, Integer id_interface){
+    public HashMap<String, Integer> integrateInfo(String p_source, String p_prov, String p_date, Integer id_interface) {
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
 
-
-        List<InterfaceDTO> unprocessedInterfaceList = HibernateUtil.getCurrentSession().createQuery("FROM InterfaceDTO WHERE statusProcess = 'N'", InterfaceDTO.class).list();
-        System.out.println(unprocessedInterfaceList.toString());
-        for (InterfaceDTO obj : unprocessedInterfaceList ) {
-
+        List<InterfaceDTO> unprocessedInterfaceList = HibernateUtil.getCurrentSession()
+                .createQuery("FROM InterfaceDTO WHERE statusProcess = 'N'", InterfaceDTO.class).list();
+        for (InterfaceDTO obj : unprocessedInterfaceList) {
 
             // INSERT INTO MASTER TABLES DEPENDING ON THE RESOURCE
             switch (obj.getResources()) {
                 case Constantes.C_CUSTOMERS:
-                    //CustomerDto c = new Gson(obj.getJsonContent(),CustomerDTO.class);
                     CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
-                    //String traduccion_tipo_via = repository.getTransalation(obj.getCodProv(),c.getTipoVia());
-                    //insert mm_customers values cjon.getName(), 
+
+                    String traduccion_tipo_via = getTranslation(obj.getProviderCode(), newCustomer.getStreetType(), p_date, p_prov);
+                    System.out.println("TIPO VIA TRANSLATE: " + traduccion_tipo_via);
+                    // insert mm_customers values cjon.getName(),
                     break;
                 case Constantes.C_VEHICLES:
+                    //String traduccion_color_vehiculo = getTranslation(p_prov, p_source, p_date, p_prov)
                     break;
 
                 case Constantes.C_PARTS:
-                break;
+                    // String traduccion_factura_blabla = getTranslation()
+                    break;
                 default:
                     break;
             }
-            /* switch (p_source) {
-                case Constantes.C_CUSTOMERS:
-                    
-                    break;
-                case Constantes.C_PARTS:
-                    
-                    break;
-                case Constantes.C_VEHICLES:
-                    
-                    break;
-                default:
-                    break;
-            } */
+            /*
+             * switch (p_source) {
+             * case Constantes.C_CUSTOMERS:
+             * 
+             * break;
+             * case Constantes.C_PARTS:
+             * 
+             * break;
+             * case Constantes.C_VEHICLES:
+             * 
+             * break;
+             * default:
+             * break;
+             * }
+             */
         }
 
         /*
-        for (alljson){
-            traduccion_tipo_via = repository.getTransalation(int.getCodProv,cjon.getTipoVia);
-            insert mm_customers values cjon.getName(), 
-        }
-        */
+         * for (alljson){
+         * traduccion_tipo_via =
+         * repository.getTransalation(int.getCodProv,cjon.getTipoVia);
+         * insert mm_customers values cjon.getName(),
+         * }
+         */
 
         HibernateUtil.commitTransaction();
         HibernateUtil.closeSessionFactory();
 
-          return null;
+        return null;
     }
 
-
-} 
+    private String getTranslation(String providerCode, String addressType, String p_date, String p_prov) {
+        try{
+            System.out.println("GETS IN HERE!");
+            List<TranslationDTO> translationList = HibernateUtil.getCurrentSession()
+                    .createQuery("FROM TranslationDTO where " +
+                            "ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "
+                            + "AND providerCode = ifnull(:p_prov, providerCode)", TranslationDTO.class)
+                    .setParameter("p_prov", p_prov)
+                    .setParameter("p_date", p_date)
+                    .list();
+    
+            System.out.println("Translations: " + translationList);
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return "";
+    }
+}

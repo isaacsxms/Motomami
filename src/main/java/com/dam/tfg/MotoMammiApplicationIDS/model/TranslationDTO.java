@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "MM_TRANSLATIONS")
-public class TranslationsDTO {
+public class TranslationDTO {
 
     @Id
     @Column(name = "id")
@@ -95,9 +95,9 @@ public class TranslationsDTO {
         this.provider = provider;
     }
 
-    public TranslationsDTO(){}
+    public TranslationDTO(){}
     
-    public TranslationsDTO(int id, String providerCode, String internalCode, String externalCode, Date initializeDate,
+    public TranslationDTO(int id, String providerCode, String internalCode, String externalCode, Date initializeDate,
             Date endDate, ProviderDTO provider) {
         this.id = id;
         this.providerCode = providerCode;
