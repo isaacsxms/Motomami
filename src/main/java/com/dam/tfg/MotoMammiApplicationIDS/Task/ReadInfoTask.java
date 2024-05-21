@@ -21,11 +21,22 @@ public class ReadInfoTask {
     public void readInfoCustomers() {
         try {
             System.out.println("Reading Customer info!");
-            processImpl.readFileInfo(Constantes.C_CUSTOMERS, "SAN", null);
+            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, "CAX", null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    @Scheduled(cron = "${cron.time.schedule}")
+    public void processInfo() {
+        try {
+            System.out.println("Reading Customer info!");
+            //processImpl.integrateInfo(null, null, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 /*     @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoVehicle() {
         try {

@@ -18,7 +18,7 @@ public class T_Controller
     @Autowired
     ProcessService pService;
 
-    @RequestMapping(value =("/readInfo/{resource}/{codprov}/{date}"),
+    @RequestMapping(value =("/readInfoFileIDS/{resource}/{codprov}/{date}"),
                     method = RequestMethod.GET,
                     produces = "application/json")
     HashMap<String, Integer> callProcessReadInfo(@PathVariable String resource,
@@ -31,6 +31,27 @@ public class T_Controller
                                "Date: " + date);
 
         return pService.readFileInfo(resource, codprov, date);
+
+        } catch (Exception e){
+            System.err.println("heey pero me estoy poniendo peluche yo 😏😏");
+            return new HashMap<>(); // Return an empty map or handle error accordingly
+        }
+    }
+    @RequestMapping(value =("/processInfoFileIDS/{resource}/{codprov}/{date}/{id_interface}"),
+                    method = RequestMethod.GET,
+                    produces = "application/json")
+    HashMap<String, Integer> callProcessInfo(@PathVariable String resource,
+                               @PathVariable String codprov,
+                               @PathVariable String date,//"20240423"
+                               @PathVariable Integer id_interface
+                               ){
+        try{
+            System.out.println("Resource: " + resource + "\n" +
+                               "Provider code: " + codprov + "\n" +
+                               "Date: " + date + "\n" + 
+                               "id_interface" + id_interface);
+
+        return pService.integrateInfo(resource, codprov, date, id_interface);
 
         } catch (Exception e){
             System.err.println("heey pero me estoy poniendo peluche yo 😏😏");

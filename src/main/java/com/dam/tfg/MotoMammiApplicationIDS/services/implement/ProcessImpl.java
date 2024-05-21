@@ -14,6 +14,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
@@ -209,33 +210,67 @@ public class ProcessImpl implements ProcessService {
                 }
             } catch (Exception e) {
                 System.err.println("ERROR INSERTING INTO INTERFACE: " + e.getMessage());
-                if (existingRecord != null) {
-                    existingRecord.setStatusProcess('E');
-                    existingRecord.setOperation("UPD");
-                    HibernateUtil.getCurrentSession().update(existingRecord);
-                } else {
-                    InterfaceDTO errorRecord = new InterfaceDTO();
-                    errorRecord.setJsonContent(jsonContent);
-                    errorRecord.setInternalCode(customer.getDni());
-                    errorRecord.setCreationDate(new Date());
-                    errorRecord.setLastUpdated(new Date());
-                    errorRecord.setStatusProcess('E');
-                    errorRecord.setOperation("NEW");
-                    errorRecord.setProviderCode(p_prov);
-                    errorRecord.setResources(p_source);
-                    errorRecord.setErrorCode("ERR_CODE");
-                    errorRecord.setErrorMessage(e.getMessage());
-                }
-                numErrors++;
-            }
         }
+    }
         statistics.put("numInserted", numInserted);
         statistics.put("numUpdated", numUpdated);
         statistics.put("numErrors", numErrors);
     }
 
-   /*  public void translations() {
+    @Override
+    public HashMap<String, Integer> integrateInfo(String p_source, String p_prov, String p_Date, Integer id_interface){
+        HibernateUtil.buildSessionFactory();
+        HibernateUtil.openSession();
 
+
+        List<InterfaceDTO> unprocessedInterfaceList = HibernateUtil.getCurrentSession().createQuery("FROM InterfaceDTO WHERE statusProcess = 'N'", InterfaceDTO.class).list();
+        System.out.println(unprocessedInterfaceList.toString());
+        for (InterfaceDTO obj : unprocessedInterfaceList ) {
+
+
+            // INSERT INTO MASTER TABLES DEPENDING ON THE RESOURCE
+            switch (obj.getResources()) {
+                case Constantes.C_CUSTOMERS:
+                    //CustomerDto c = new Gson(obj.getJsonContent(),CustomerDTO.class);
+                    CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
+                    //String traduccion_tipo_via = repository.getTransalation(obj.getCodProv(),c.getTipoVia());
+                    //insert mm_customers values cjon.getName(), 
+                    break;
+                case Constantes.C_VEHICLES:
+                    break;
+
+                case Constantes.C_PARTS:
+                break;
+                default:
+                    break;
+            }
+            /* switch (p_source) {
+                case Constantes.C_CUSTOMERS:
+                    
+                    break;
+                case Constantes.C_PARTS:
+                    
+                    break;
+                case Constantes.C_VEHICLES:
+                    
+                    break;
+                default:
+                    break;
+            } */
+        }
+
+        /*
+        for (alljson){
+            traduccion_tipo_via = repository.getTransalation(int.getCodProv,cjon.getTipoVia);
+            insert mm_customers values cjon.getName(), 
+        }
+        */
+
+        HibernateUtil.commitTransaction();
+        HibernateUtil.closeSessionFactory();
+
+          return null;
     }
-    */
+
+
 } 
