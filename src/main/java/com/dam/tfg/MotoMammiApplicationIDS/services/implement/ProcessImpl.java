@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Component;
 
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
@@ -222,72 +224,72 @@ public class ProcessImpl implements ProcessService {
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
 
+        Session session = HibernateUtil.getCurrentSession();
+        Transaction transaction = session.beginTransaction();  
+
+        getCurrentDateIfNull(p_date);
+
         List<InterfaceDTO> unprocessedInterfaceList = HibernateUtil.getCurrentSession()
-                .createQuery("FROM InterfaceDTO WHERE statusProcess = 'N'", InterfaceDTO.class).list();
-        for (InterfaceDTO obj : unprocessedInterfaceList) {
+                .createQuery("FROM InterfaceDTO WHERE statusProcess = 'N' AND providerCode = ifnull(:p_prov, providerCode)", InterfaceDTO.class)
+                .setParameter("p_prov", p_prov)
+                .list();
+                for (InterfaceDTO obj : unprocessedInterfaceList) {
+                    try {
+                        // INSERT INTO MASTER TABLES DEPENDING ON THE RESOURCE
+                        switch (obj.getResources()) {
+                            case Constantes.C_CUSTOMERS:
+                                CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
+                                String traduccion_tipo_via = getTranslation(obj.getProviderCode(), newCustomer.getStreetType(), p_date);
+                                System.out.println("TIPO VIA TRANSLATE: " + traduccion_tipo_via);
+                                newCustomer.setStreetType(traduccion_tipo_via);
+                                session.save(newCustomer);
+                                obj.setStatusProcess('P');
+                                session.update(obj);
+                                break;
+                            case Constantes.C_VEHICLES:
+                                // Add your logic for VEHICLES
+                                break;
+                            case Constantes.C_PARTS:
+                                // Add your logic for PARTS
+                                break;
+                            default:
+                                break;
+                        }
+                        session.flush(); // Ensure all changes are flushed to the database
+                    } catch (Exception e) {
+                        System.err.println("Error processing InterfaceDTO: " + e.getMessage());
+                        // Optionally, set the status to 'E' (Error) if there is a failure
+                        obj.setStatusProcess('E');
+                        session.update(obj);
+                    }
+                }
 
-            // INSERT INTO MASTER TABLES DEPENDING ON THE RESOURCE
-            switch (obj.getResources()) {
-                case Constantes.C_CUSTOMERS:
-                    CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
-
-                    String traduccion_tipo_via = getTranslation(obj.getProviderCode(), newCustomer.getStreetType(), p_date, p_prov);
-                    System.out.println("TIPO VIA TRANSLATE: " + traduccion_tipo_via);
-                    // insert mm_customers values cjon.getName(),
-                    break;
-                case Constantes.C_VEHICLES:
-                    //String traduccion_color_vehiculo = getTranslation(p_prov, p_source, p_date, p_prov)
-                    break;
-
-                case Constantes.C_PARTS:
-                    // String traduccion_factura_blabla = getTranslation()
-                    break;
-                default:
-                    break;
-            }
-            /*
-             * switch (p_source) {
-             * case Constantes.C_CUSTOMERS:
-             * 
-             * break;
-             * case Constantes.C_PARTS:
-             * 
-             * break;
-             * case Constantes.C_VEHICLES:
-             * 
-             * break;
-             * default:
-             * break;
-             * }
-             */
-        }
-
-        /*
-         * for (alljson){
-         * traduccion_tipo_via =
-         * repository.getTransalation(int.getCodProv,cjon.getTipoVia);
-         * insert mm_customers values cjon.getName(),
-         * }
-         */
-
-        HibernateUtil.commitTransaction();
+        transaction.commit();
         HibernateUtil.closeSessionFactory();
 
         return null;
     }
 
-    private String getTranslation(String providerCode, String addressType, String p_date, String p_prov) {
+    private String getTranslation(String providerCode, String externalCode, String p_date) {
         try{
             System.out.println("GETS IN HERE!");
-            List<TranslationDTO> translationList = HibernateUtil.getCurrentSession()
+            TranslationDTO translation = HibernateUtil.getCurrentSession()
                     .createQuery("FROM TranslationDTO where " +
                             "ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "
-                            + "AND providerCode = ifnull(:p_prov, providerCode)", TranslationDTO.class)
-                    .setParameter("p_prov", p_prov)
+                            + "AND providerCode = ifnull(:p_prov, providerCode)" +
+                            "AND externalCode = :externalCode ", TranslationDTO.class)
+                    .setParameter("p_prov", providerCode)
                     .setParameter("p_date", p_date)
-                    .list();
+                    .setParameter("externalCode", externalCode )
+                    .uniqueResult();
     
-            System.out.println("Translations: " + translationList);
+            System.out.println("Translation: " + translation);
+            String internalCode = translation.getInternalCode();
+            if (internalCode == null) {
+                System.err.println("Internal code seems to be null!");
+                return "";
+            }
+            return internalCode;
         } catch(Exception e) {
             System.err.println(e.getMessage());
         }

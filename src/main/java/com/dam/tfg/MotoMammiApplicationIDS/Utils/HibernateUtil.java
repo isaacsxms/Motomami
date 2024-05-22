@@ -1,5 +1,6 @@
 package com.dam.tfg.MotoMammiApplicationIDS.Utils;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 
@@ -27,6 +28,8 @@ public class HibernateUtil {
         configuration.addAnnotatedClass(ProviderDTO.class);
         configuration.addAnnotatedClass(CustomerDTO.class);
         configuration.addAnnotatedClass(InterfaceDTO.class);
+        configuration.addAnnotatedClass(TranslationDTO.class);
+        
         ServiceRegistry sr = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(sr);
         } catch (Exception e) {
