@@ -22,6 +22,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.VehicleDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 import com.google.gson.Gson;
 
@@ -60,9 +61,22 @@ public class ProcessImpl implements ProcessService {
         p_date = getCurrentDateIfNull(p_date);
 
         List<String> files = getFilePaths(activeSources, p_date);
-        List<CustomerDTO> customerList = processCustomerFiles(files, statistics);
 
-        processCustomerData(customerList, p_prov, p_source, statistics);
+
+        switch (p_source) {
+            case Constantes.C_CUSTOMERS:
+                System.out.println("Enters customer switch!");
+                List<CustomerDTO> customerList = processCustomerFiles(files, statistics);
+                processCustomerData(customerList, p_prov, p_source, statistics);
+                break;
+            case Constantes.C_VEHICLES:
+                processVehicleFiles(files.get(1), statistics);
+                break;
+            case Constantes.C_PARTS:
+            default:
+                break;
+        }
+
 
         HibernateUtil.commitTransaction();
         HibernateUtil.closeSessionFactory();
@@ -108,16 +122,14 @@ public class ProcessImpl implements ProcessService {
         for (ProviderDTO activeSource : activeSources) {
             String providerCode = activeSource.getProviderCode();
             String findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
+            String findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + p_date + ".dat";
 
-            System.out.println("File path: " + findCustomersFile);
+            System.out.println("File path: " + findVehiclesFile);
 
             files.add(findCustomersFile);
+            files.add(findVehiclesFile);
 
-            // findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" +
-            // formattedDate + ".dat";
-            // findPartsFile = resource + partsNameFile + providerCode + "_" + formattedDate
-            // + ".dat";
-            // files.add(findVehiclesFile)
+            // findPartsFile = resource + partsNameFile + providerCode + "_" + p_date + ".dat";
             // files.add(findPartsFile)
         }
         return files;
@@ -140,11 +152,42 @@ public class ProcessImpl implements ProcessService {
             } catch (FileNotFoundException e) {
                 System.err.println("File not found: " + file);
             } catch (IOException e) {
-                System.err.println("ERROR: Reading file... " + e.getMessage());
+                System.err.println("ERROR: Reading file... " + e.getMessage()); 
             }
         }
         statistics.put("numLines", numLines);
         return customerList;
+    }
+
+
+    private List<VehicleDTO> processVehicleFiles(String vehicleFile, HashMap<String, Integer> statistics) {
+        List<VehicleDTO> vehicleList = new ArrayList<>();
+
+        System.out.println("Reading file: " + vehicleFile);
+
+        BufferedReader br = null;
+        String line = null;
+        try {
+            br = new BufferedReader(new FileReader(vehicleFile));
+        } catch (FileNotFoundException e) {
+            System.err.println("ERROR: File -> " + vehicleFile +  " not found");
+        }
+        try {
+            br.readLine();// skip first line (column names)
+            while ((line = br.readLine()) != null) {
+                numLines++;
+                VehicleDTO vehicle = parseVehicle(line);
+                System.out.println("Vehicle: " + vehicle.toString());
+                if (vehicle != null) {
+                    vehicleList.add(vehicle);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } 
+
+        statistics.put("numLines", numLines);
+        return vehicleList;
     }
 
     private CustomerDTO parseCustomer(String line) {
@@ -161,6 +204,14 @@ public class ProcessImpl implements ProcessService {
         }
         return null;
     }
+
+    private VehicleDTO parseVehicle(String line) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String[] vehicleData = line.split(";");
+        
+        return new VehicleDTO(0, vehicleData[0], vehicleData[1], vehicleData[2], vehicleData[3], vehicleData[4], vehicleData[5], vehicleData[6], vehicleData[7]);
+    }
+
 
     private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source,
             HashMap<String, Integer> statistics) {
