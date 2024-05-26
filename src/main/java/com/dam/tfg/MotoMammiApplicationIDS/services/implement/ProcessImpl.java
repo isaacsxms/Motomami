@@ -20,6 +20,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.PartsDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.VehicleDTO;
@@ -62,21 +63,21 @@ public class ProcessImpl implements ProcessService {
 
         List<String> files = getFilePaths(activeSources, p_date);
 
-
         switch (p_source) {
             case Constantes.C_CUSTOMERS:
                 System.out.println("Enters customer switch!");
-                List<CustomerDTO> customerList = processCustomerFiles(files, statistics);
+                List<CustomerDTO> customerList = processCustomerFiles(files.get(0), statistics);
                 processCustomerData(customerList, p_prov, p_source, statistics);
                 break;
             case Constantes.C_VEHICLES:
-                processVehicleFiles(files.get(1), statistics);
+                List<VehicleDTO> vehicleList = processVehicleFiles(files.get(1), statistics);
+                processVehicleData(vehicleList, p_prov, p_source, statistics);
                 break;
             case Constantes.C_PARTS:
+                List<PartsDTO> partsList = processPartsFiles(files.get(2), statistics);
             default:
                 break;
         }
-
 
         HibernateUtil.commitTransaction();
         HibernateUtil.closeSessionFactory();
@@ -92,7 +93,6 @@ public class ProcessImpl implements ProcessService {
     private List<ProviderDTO> getActiveSources(String p_prov, String p_date) {
         List<ProviderDTO> activeSources = null;
         try {
-            HibernateUtil.beginTransaction();
             activeSources = HibernateUtil.getCurrentSession().createQuery(
                     "FROM MM_PROVIDERS where active = 1 " +
                             "and ifnull(:p_date,current_date()) BETWEEN initializeDate AND ifnull(endDate,'2099-01-31') "
@@ -123,21 +123,17 @@ public class ProcessImpl implements ProcessService {
             String providerCode = activeSource.getProviderCode();
             String findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
             String findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + p_date + ".dat";
-
-            System.out.println("File path: " + findVehiclesFile);
+            String findPartsFile = resource + partsNameFile + providerCode + "_" + p_date + ".dat";
 
             files.add(findCustomersFile);
             files.add(findVehiclesFile);
-
-            // findPartsFile = resource + partsNameFile + providerCode + "_" + p_date + ".dat";
-            // files.add(findPartsFile)
+            files.add(findPartsFile);
         }
         return files;
     }
 
-    private List<CustomerDTO> processCustomerFiles(List<String> files, HashMap<String, Integer> statistics) {
+    private List<CustomerDTO> processCustomerFiles(String file, HashMap<String, Integer> statistics) {
         List<CustomerDTO> customerList = new ArrayList<>();
-        for (String file : files) {
             System.out.println("Reading file: " + file);
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 br.readLine(); // skip first line (column names)
@@ -154,42 +150,59 @@ public class ProcessImpl implements ProcessService {
             } catch (IOException e) {
                 System.err.println("ERROR: Reading file... " + e.getMessage()); 
             }
-        }
         statistics.put("numLines", numLines);
         return customerList;
     }
 
-
     private List<VehicleDTO> processVehicleFiles(String vehicleFile, HashMap<String, Integer> statistics) {
         List<VehicleDTO> vehicleList = new ArrayList<>();
-
+    
         System.out.println("Reading file: " + vehicleFile);
-
-        BufferedReader br = null;
-        String line = null;
-        try {
-            br = new BufferedReader(new FileReader(vehicleFile));
-        } catch (FileNotFoundException e) {
-            System.err.println("ERROR: File -> " + vehicleFile +  " not found");
-        }
-        try {
-            br.readLine();// skip first line (column names)
+    
+        try (BufferedReader br = new BufferedReader(new FileReader(vehicleFile))) {
+            br.readLine(); // skip first line (column names)
+            String line;
             while ((line = br.readLine()) != null) {
                 numLines++;
                 VehicleDTO vehicle = parseVehicle(line);
-                System.out.println("Vehicle: " + vehicle.toString());
                 if (vehicle != null) {
                     vehicleList.add(vehicle);
                 }
             }
+        } catch (FileNotFoundException e) {
+            System.err.println("ERROR: File -> " + vehicleFile +  " not found");
         } catch (IOException e) {
             e.printStackTrace();
-        } 
-
+        }
+    
         statistics.put("numLines", numLines);
         return vehicleList;
     }
 
+    private List<PartsDTO> processPartsFiles(String partsFile, HashMap<String, Integer> statistics) {
+        List<PartsDTO> partsList = new ArrayList<>();
+    
+        System.out.println("Reading file: " + partsFile);
+    
+        try (BufferedReader br = new BufferedReader(new FileReader(partsFile))) {
+            br.readLine(); // skip first line (column names)
+            String line;
+            while ((line = br.readLine()) != null) {
+                numLines++;
+                PartsDTO part = parseParts(line);
+                if (part != null) {
+                    partsList.add(part);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("ERROR: File -> " + partsFile +  " not found");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    
+        statistics.put("numLines", numLines);
+        return partsList;
+    }
     private CustomerDTO parseCustomer(String line) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String[] customerData = line.split(";");
@@ -206,25 +219,85 @@ public class ProcessImpl implements ProcessService {
     }
 
     private VehicleDTO parseVehicle(String line) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String[] vehicleData = line.split(";");
-        
-        return new VehicleDTO(0, vehicleData[0], vehicleData[1], vehicleData[2], vehicleData[3], vehicleData[4], vehicleData[5], vehicleData[6], vehicleData[7]);
+        try {
+            String[] vehicleData = line.split(";");
+
+            return new VehicleDTO(0, vehicleData[0], vehicleData[1], vehicleData[2], vehicleData[3], vehicleData[4], vehicleData[5]);
+        } catch(Exception e) {
+            System.err.println("ERROR: Parsing vehicle " + e.getMessage());
+        }       
+        return null;
     }
 
+    private PartsDTO parseParts(String line) {
+        try {
+            String[] partsData = line.split(";");
+
+            return new PartsDTO(0, partsData[0], partsData[1], partsData[2], new Date(), partsData[4], Integer.parseInt(partsData[5]), partsData[6]);
+        } catch(Exception e) {
+            System.err.println("ERROR: Parsing Parts " + e.getMessage());
+        }       
+        return null;
+    }
+
+    private void processVehicleData(List<VehicleDTO> vehicleList, String p_prov, String p_source, HashMap<String, Integer> statistics) {
+        for (VehicleDTO vehicle : vehicleList) {
+            String jsonContent = new Gson().toJson(vehicle);
+            InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
+                    .createQuery("FROM InterfaceDTO WHERE internalCode = :dni", InterfaceDTO.class)
+                    .setParameter("dni", vehicle.getDni())
+                    .uniqueResult();
+                    try {
+                        if (existingRecord != null && existingRecord.getResources().equals(p_source)) {
+                            System.out.println("Interface exists!");
+                            if (!existingRecord.getJsonContent().equals(jsonContent) ) {
+                                System.out.println("Entered! to update");
+                                existingRecord.setJsonContent(jsonContent);
+                                existingRecord.setUpdatedBy(systemUsername);
+                                existingRecord.setOperation("UPD");
+                                HibernateUtil.getCurrentSession().update(existingRecord);
+                                numUpdated++;
+                            }
+                            // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
+                        } else {
+                            InterfaceDTO newInterface = new InterfaceDTO();
+                            newInterface.setExternalCode(generateExternalCode(p_prov, vehicle.getDni()));
+                            newInterface.setJsonContent(jsonContent);
+                            newInterface.setInternalCode(vehicle.getDni());
+                            newInterface.setCreationDate(new Date());
+                            newInterface.setLastUpdated(new Date());
+                            newInterface.setStatusProcess('N'); // STATUS N TILL IT IS SUCCESFULLY INSERTED INTO CUS, VEH or PRT
+                            newInterface.setOperation("NEW");
+                            newInterface.setCreatedBy(systemUsername);
+                            newInterface.setProviderCode(p_prov);
+                            newInterface.setResources(p_source);
+                            HibernateUtil.getCurrentSession().save(newInterface);
+                            numInserted++;
+                        }
+                    } catch (Exception e) {
+                        System.err.println("ERROR INSERTING INTO INTERFACE: " + e.getMessage());
+                    }
+                }
+                
+                statistics.put("numInserted", numInserted);
+                statistics.put("numUpdated", numUpdated);
+                statistics.put("numErrors", numErrors);
+    }
 
     private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source,
             HashMap<String, Integer> statistics) {
         for (CustomerDTO customer : customerList) {
             String jsonContent = new Gson().toJson(customer);
+            System.out.println(jsonContent);
             InterfaceDTO existingRecord = HibernateUtil.getCurrentSession()
                     .createQuery("FROM InterfaceDTO WHERE internalCode = :dni", InterfaceDTO.class)
                     .setParameter("dni", customer.getDni())
                     .uniqueResult();
 
+            System.out.println("HELLO¿??");
             try {
-                if (existingRecord != null) {
-                    System.out.println("Interface exists!");
+                if (existingRecord != null && p_source.equals(Constantes.C_CUSTOMERS)) {
+                    System.out.println("Update customer Interface!");
                     if (!existingRecord.getJsonContent().equals(jsonContent)) {
                         System.out.println("Entered! to update");
                         existingRecord.setJsonContent(jsonContent);
@@ -232,23 +305,14 @@ public class ProcessImpl implements ProcessService {
                         existingRecord.setOperation("UPD");
                         HibernateUtil.getCurrentSession().update(existingRecord);
                         numUpdated++;
+                    } else {
+                        System.out.println("No changes made, not inserting or updating customer!");
+                        // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
                     }
-                    // IF IT HAS BOTH THE SAME DNI AND JSON CONTENT THEN IT WONT DO ANYTHING
                 } else {
+                    System.out.println("Will insert new Customer Interfaces!");
                     InterfaceDTO newInterface = new InterfaceDTO();
-                    switch (p_prov) {
-                        case "CAX":
-                            newInterface.setExternalCode("C-" + customer.getDni() + "-X");
-                            break;
-                        case "SAN":
-                            newInterface.setExternalCode("S-" + customer.getDni() + "-N");
-                            break;
-                        case "ING":
-                            newInterface.setExternalCode("I-" + customer.getDni() + "-G");
-                            break;
-                        default:
-                            break;
-                    }
+                    newInterface.setExternalCode(generateExternalCode(p_prov, customer.getDni()));
                     newInterface.setJsonContent(jsonContent);
                     newInterface.setInternalCode(customer.getDni());
                     newInterface.setCreationDate(new Date());
@@ -270,55 +334,95 @@ public class ProcessImpl implements ProcessService {
         statistics.put("numErrors", numErrors);
     }
 
-    @Override
+
+    private String generateExternalCode(String p_prov, String dni) {
+        switch (p_prov) {
+            case "CAX":
+                return "C-" + dni + "-X";
+            case "SAN":
+                return "S-" + dni + "-N";
+            case "ING":
+                return "I-" + dni + "-G";
+            default:
+                return "";
+        }
+    }
+
     public HashMap<String, Integer> integrateInfo(String p_source, String p_prov, String p_date, Integer id_interface) {
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
-
+    
         Session session = HibernateUtil.getCurrentSession();
-        Transaction transaction = session.beginTransaction();  
-
-        getCurrentDateIfNull(p_date);
-
+        Transaction transaction = session.beginTransaction();
+        p_date = getCurrentDateIfNull(p_date);
+    
         List<InterfaceDTO> unprocessedInterfaceList = HibernateUtil.getCurrentSession()
-                .createQuery("FROM InterfaceDTO WHERE statusProcess = 'N' AND providerCode = ifnull(:p_prov, providerCode)", InterfaceDTO.class)
+                .createQuery("FROM InterfaceDTO WHERE statusProcess = 'N' AND providerCode = ifnull(:p_prov, providerCode) AND resources = :p_source", InterfaceDTO.class)
                 .setParameter("p_prov", p_prov)
+                .setParameter("p_source", p_source)
                 .list();
-                for (InterfaceDTO obj : unprocessedInterfaceList) {
-                    try {
-                        // INSERT INTO MASTER TABLES DEPENDING ON THE RESOURCE
-                        switch (obj.getResources()) {
-                            case Constantes.C_CUSTOMERS:
-                                CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
-                                String traduccion_tipo_via = getTranslation(obj.getProviderCode(), newCustomer.getStreetType(), p_date);
-                                System.out.println("TIPO VIA TRANSLATE: " + traduccion_tipo_via);
-                                newCustomer.setStreetType(traduccion_tipo_via);
-                                session.save(newCustomer);
-                                obj.setStatusProcess('P');
-                                session.update(obj);
-                                break;
-                            case Constantes.C_VEHICLES:
-                                // Add your logic for VEHICLES
-                                break;
-                            case Constantes.C_PARTS:
-                                // Add your logic for PARTS
-                                break;
-                            default:
-                                break;
-                        }
-                        session.flush(); // Ensure all changes are flushed to the database
-                    } catch (Exception e) {
-                        System.err.println("Error processing InterfaceDTO: " + e.getMessage());
-                        // Optionally, set the status to 'E' (Error) if there is a failure
-                        obj.setStatusProcess('E');
-                        session.update(obj);
-                    }
+    
+        for (InterfaceDTO obj : unprocessedInterfaceList) {
+            try {
+                System.out.println("Processing InterfaceDTO with resources: " + obj.getResources());
+                switch (obj.getResources()) {
+                    case Constantes.C_CUSTOMERS:
+                        processCustomer(obj, session, p_date);
+                        break;
+                    case Constantes.C_VEHICLES:
+                        processVehicle(obj, session, p_date);
+                        break;
+                    case Constantes.C_PARTS:
+                        // handle parts
+                        break;
+                    default:
+                        System.out.println("Unknown resource type");
+                        break;
                 }
-
+            } catch (Exception e) {
+                System.err.println("Error processing InterfaceDTO: " + e.getMessage());
+                e.printStackTrace();
+                obj.setStatusProcess('E');
+                session.update(obj);
+                transaction.rollback();
+                session.clear();
+                break; // Break on error to prevent partial commits
+            }
+        }
+    
         transaction.commit();
         HibernateUtil.closeSessionFactory();
-
+    
         return null;
+    }
+    
+    private void processCustomer(InterfaceDTO obj, Session session, String p_date) {
+        System.out.println("Enters customer integrate case");
+        CustomerDTO newCustomer = new Gson().fromJson(obj.getJsonContent(), CustomerDTO.class);
+        String traduccion_tipo_via = getTranslation(obj.getProviderCode(), newCustomer.getStreetType(), p_date);
+        newCustomer.setStreetType(traduccion_tipo_via);
+        session.save(newCustomer);
+        obj.setStatusProcess('P');
+        session.update(obj);
+    }
+    
+    private void processVehicle(InterfaceDTO obj, Session session, String p_date) {
+        System.out.println("Enters vehicle integrate case");
+        VehicleDTO newVehicle = new Gson().fromJson(obj.getJsonContent(), VehicleDTO.class);
+        String traduccion_color = getTranslation(obj.getProviderCode(), newVehicle.getColor(), p_date);
+        if (traduccion_color == null) {
+            traduccion_color = newVehicle.getColor(); // Fallback to the original color if no translation is found
+        }
+        newVehicle.setColor(traduccion_color);
+    
+        try {
+            session.save(newVehicle);
+            obj.setStatusProcess('P');
+        } catch (Exception e) {
+            System.err.println("Error saving VehicleDTO: " + e.getMessage());
+            obj.setStatusProcess('E');
+        }
+        session.update(obj);
     }
 
     private String getTranslation(String providerCode, String externalCode, String p_date) {

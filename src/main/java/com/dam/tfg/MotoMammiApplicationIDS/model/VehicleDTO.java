@@ -1,11 +1,6 @@
 package com.dam.tfg.MotoMammiApplicationIDS.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "MM_VEHICLE")
@@ -15,10 +10,7 @@ public class VehicleDTO {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "ext_id")
-    private String ext_id;
-
-    @Column(name = "number_plate")
+    @Column(name = "number_plate", unique = true)
     private String plateNumber;
 
     @Column(name = "type_vehicle")
@@ -29,30 +21,23 @@ public class VehicleDTO {
 
     @Column(name = "model")
     private String model;
-    
+
     @Column(name = "color")
     private String color;
 
-    @Column(name = "serialNumber")
-    private String serialNumber;
-    
-    @Column(name = "dni")
+    @Column(name = "dni_customer")
     private String dni;
 
+  /*   @ManyToOne
+    @JoinColumn(name = "dni_customer", referencedColumnName = "dni", insertable = false, updatable = false)
+    private CustomerDTO customer;
+ */
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getExt_id() {
-        return ext_id;
-    }
-
-    public void setExt_id(String ext_id) {
-        this.ext_id = ext_id;
     }
 
     public String getPlateNumber() {
@@ -95,14 +80,6 @@ public class VehicleDTO {
         this.color = color;
     }
 
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
     public String getDni() {
         return dni;
     }
@@ -111,25 +88,30 @@ public class VehicleDTO {
         this.dni = dni;
     }
 
-    public VehicleDTO(){}
-    
-    public VehicleDTO(int id, String ext_id, String plateNumber, String vehicleType, String brand, String model,
-    String color, String serialNumber, String dni) {
+    /* public CustomerDTO getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(CustomerDTO customer) {
+        this.customer = customer;
+    } */
+
+    public VehicleDTO() {}
+
+    public VehicleDTO(int id, String plateNumber, String vehicleType, String brand, String model,
+                      String color, String dni) {
         this.id = id;
-        this.ext_id = ext_id;
         this.plateNumber = plateNumber;
         this.vehicleType = vehicleType;
         this.brand = brand;
         this.model = model;
         this.color = color;
-        this.serialNumber = serialNumber;
         this.dni = dni;
     }
 
     @Override
     public String toString() {
-        return "VehicleDTO [id=" + id + ", ext_id=" + ext_id + ", plateNumber=" + plateNumber + ", vehicleType="
-                + vehicleType + ", brand=" + brand + ", model=" + model + ", color=" + color + ", serialNumber="
-                + serialNumber + ", dni=" + dni + "]";
+        return "VehicleDTO [id=" + id + ", plateNumber=" + plateNumber + ", vehicleType="
+                + vehicleType + ", brand=" + brand + ", model=" + model + ", color=" + color + ", dni=" + dni + "]";
     }
 }

@@ -1,21 +1,21 @@
-idExterno;matricula;tipoVehiculo;marca;modelo;color;numeroSerie;dni
-496;J 7770 VCPF;Avenue;GMC;Savana;Indigo;KRVR8259074;B5572441L
-645;D 8617 OUSG;Street;Honda;Accord;Red;IUUR8875138;I3636916S
-768;L 1629 NTNN;Drive;Chevrolet;SSR;Turquoise;WDZW8097268;Q8252236X
-251;R 8588 WJSF;Avenue;GMC;Yukon;Puce;DNZT0338556;A4862586O
-109;S 0593 SSVC;Trail;Chevrolet;Tahoe;Turquoise;ZNVV7896479;N7784375Q
-852;T 1410 SNTA;Place;Nissan;Sentra;Maroon;KUDR5185044;G5800519V
-484;N 5031 GJHD;Place;GMC;1500;Purple;IPSK4365916;H7128787N
-337;V 4744 EPNY;Way;Dodge;Avenger;Violet;ETUI6817249;I5817317W
-613;K 7394 YFQM;Avenue;Nissan;Maxima;Blue;FWBE0412049;J4668194K
-700;W 5889 QNKP;Alley;Mercury;Cougar;Aquamarine;CRPW6457517;K3063756Z
-469;L 3072 YICN;Avenue;Mercedes-Benz;SLR McLaren;Puce;LKKI4263949;N4094019D
-698;I 3911 VXUT;Terrace;Mercury;Mystique;Violet;SFJG9630888;C1519855O
-928;R 0983 JOVW;Pass;Toyota;Tacoma;Yellow;CJYX4464062;Y3331780Z
-957;Y 6666 ITRF;Drive;Nissan;Maxima;Teal;GODU9867171;A5755343L
-864;L 2270 DGNS;Crossing;Scion;xB;Purple;XNUE3464931;B8129394Y
-526;V 0515 SIVS;Circle;Toyota;Yaris;Red;UVXG9185996;N1900358S
-514;P 3311 PKLL;Court;Porsche;911;Puce;PJXR5805135;Y8661728Q
-389;F 2953 VKBR;Park;Pontiac;Monterey;Pink;GNPX9141644;N6115549H
-315;C 8247 WXHK;Point;GMC;3500;Aquamarine;PPSG3816667;O2030480L
-314;B 3275 BNSD;Hill;Chevrolet;Suburban 1500;Orange;DRHF9114864;Y5581400M
+matricula;tipoVehiculo;marca;modelo;color;dni
+J 7770 VCPF;Avenue;GMC;Savana;Indigo;X7035305P
+D 8617 OUSG;Street;Honda;Accord;Red;S8087974R
+L 1629 NTNN;Drive;Chevrolet;SSR;Turquoise;Y6392038V
+R 8588 WJSF;Avenue;GMC;Yukon;Puce;Q0254201E
+S 0593 SSVC;Trail;Chevrolet;Tahoe;Turquoise;G1764603R
+T 1410 SNTA;Place;Nissan;Sentra;Maroon;J9907189U
+N 5031 GJHD;Place;GMC;1500;Purple;Y0457183F
+V 4744 EPNY;Way;Dodge;Avenger;Violet;Y4842450F
+K 7394 YFQM;Avenue;Nissan;Maxima;Blue;B9499057E
+W 5889 QNKP;Alley;Mercury;Cougar;Aquamarine;V5420412Z
+L 3072 YICN;Avenue;Mercedes-Benz;SLR McLaren;Puce;Y9161006N
+I 3911 VXUT;Terrace;Mercury;Mystique;Violet;O5247767F
+R 0983 JOVW;Pass;Toyota;Tacoma;Yellow;Q5982857L
+Y 6666 ITRF;Drive;Nissan;Maxima;Teal;D7164089T
+L 2270 DGNS;Crossing;Scion;xB;Purple;G5986045S
+V 0515 SIVS;Circle;Toyota;Yaris;Red;N3487677F
+P 3311 PKLL;Court;Porsche;911;Puce;V7138694L
+F 2953 VKBR;Park;Pontiac;Monterey;Pink;R1783460R
+C 8247 WXHK;Point;GMC;3500;Aquamarine;G1240926G
+B 3275 BNSD;Hill;Chevrolet;Suburban 1500;Orange;U7613793S
