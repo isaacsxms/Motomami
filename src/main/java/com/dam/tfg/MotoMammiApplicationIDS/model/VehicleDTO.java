@@ -28,10 +28,6 @@ public class VehicleDTO {
     @Column(name = "dni_customer")
     private String dni;
 
-  /*   @ManyToOne
-    @JoinColumn(name = "dni_customer", referencedColumnName = "dni", insertable = false, updatable = false)
-    private CustomerDTO customer;
- */
     public int getId() {
         return id;
     }

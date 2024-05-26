@@ -5,4 +5,8 @@ public class Constantes {
     public static final String C_CUSTOMERS = "CUS";
     public static final String C_PARTS = "PRT";
     public static final String C_VEHICLES = "VEH";
+
+    // OPERATION CODES
+    public static final String OPR_NEW = "NEW";
+    public static final String OPR_UPDATE = "UPD";
 }
