@@ -17,11 +17,11 @@ INSERT INTO MM_PROVIDERS (cod_prov, prov_name, date_ini, date_end, swiact)
 VALUES 
 ('CAX', 'caixa', '2024-01-01', '2024-12-31', TRUE),
 ('SAN', 'santander', '2024-02-01', NULL, TRUE),
-('ING', 'international netherlands group', '2024-03-01', '2024-12-31', FALSE);
+('ING', 'international netherlands group', '2024-03-01', '2024-12-31', TRUE);
 
 CREATE TABLE MM_CUSTOMER(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    dni VARCHAR(9) UNIQUE,
+    dni VARCHAR(9) UNIQUE NOT NULL,
     `name` VARCHAR(255),
     first_surname VARCHAR(255),
 	second_surname VARCHAR(255),
@@ -89,24 +89,43 @@ VALUES
 
 CREATE TABLE MM_VEHICLE(
 	id INT AUTO_INCREMENT PRIMARY KEY,
-    number_plate VARCHAR(20) UNIQUE,
+    number_plate VARCHAR(20) UNIQUE NOT NULL,
     type_vehicle VARCHAR(20),
     brand VARCHAR(20),
     model VARCHAR(20),
     color VARCHAR(20),
-    dni_customer VARCHAR(20),
-    FOREIGN KEY (dni_customer) REFERENCES MM_CUSTOMER(dni)
+    dni_customer VARCHAR(9) NOT NULL
 );
 
 CREATE TABLE MM_PARTS(
-id varchar(100) PRIMARY KEY,
-cod_ext varchar(100),
-cod_int varchar(100),
-descripcion varchar(100),
-date_notification date,
+id int AUTO_INCREMENT PRIMARY KEY,
+`description` varchar(100),
+date_notified date,
 number_plate varchar(100),
 id_invoice varchar(100),
-dni_vehicle varchar(100),
-FOREIGN KEY (dni_vehicle) REFERENCES MM_VEHICLE(dni_customer),
-FOREIGN KEY (cod_ext) REFERENCES MM_VEHICLE(number_plate) -- > EL CODIGO EXTERNO ES LA MATRICULA DEL VEHICULO YA QUE ES UNICO NO SE VA A DAR ESTEN DOS MATRICULAS EN UNA ASEGURADORA
+dni_customer varchar(9)
 );
+
+-- INVOICE 
+
+CREATE TABLE MM_INVOICES(
+id int AUTO_INCREMENT PRIMARY KEY,
+cod_prov varchar(20),
+dni_customer varchar(100),
+date_emitted date,
+company_name varchar(200),
+company_cif varchar(200),
+company_address varchar(200),
+price double,
+iva int,
+FOREIGN KEY (dni_customer) REFERENCES MM_CUSTOMER(dni),
+FOREIGN KEY (cod_prov) REFERENCES MM_PROVIDERS(cod_prov)
+);
+
+INSERT INTO MM_INVOICES (cod_prov, dni_customer, date_emitted, company_name, company_cif, company_address, price, iva) VALUES
+('CAX', 'X7035305P', '2024-01-15', 'Caixa Corp', 'CAX123456', 'Caixa Street, 123', 1000.50, 21),
+('SAN', 'C9276327V', '2024-02-20', 'Santander Corp', 'SAN987654', 'Santander Avenue, 456', 1500.75, 21),
+('ING', 'H2796910B', '2024-03-25', 'ING Group', 'ING789123', 'ING Road, 789', 2000.00, 21),
+('CAX', 'S8087974R', '2024-01-18', 'Caixa Corp', 'CAX654321', 'Caixa Street, 456', 1200.60, 21),
+('SAN', 'F4120976A', '2024-02-22', 'Santander Corp', 'SAN123789', 'Santander Avenue, 789', 1700.85, 21),
+('ING', 'B7069097H', '2024-03-28', 'ING Group', 'ING321654', 'ING Road, 123', 2200.10, 21);

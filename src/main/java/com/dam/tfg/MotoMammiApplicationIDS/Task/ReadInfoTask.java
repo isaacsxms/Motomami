@@ -1,6 +1,7 @@
 package com.dam.tfg.MotoMammiApplicationIDS.Task;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +21,6 @@ public class ReadInfoTask {
     @Scheduled(cron = "${cron.time.schedule}")
     public void readInfoCustomers() {
         try {
-            System.out.println("Reading Customer info!");
             //processImpl.readFileInfo(Constantes.C_CUSTOMERS, "CAX", null);
         } catch (Exception e) {
             e.printStackTrace();
@@ -30,29 +30,18 @@ public class ReadInfoTask {
     @Scheduled(cron = "${cron.time.schedule}")
     public void processInfo() {
         try {
-            System.out.println("Reading Customer info!");
-            //processImpl.integrateInfo(null, null, null, null);
+            //processImpl.integrateInfo(Constantes.PROV_CAX, null, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-/*     @Scheduled(cron = "${cron.time.schedule}")
-    public void readInfoVehicle() {
+    @Scheduled(cron = "${cron.time.schedule}")
+    public void generateInvoice() {
         try {
-            System.out.println("Reading Vehicle info");
-            ps.readFileInfo(Constantes.C_VEHICLES, "", null);
+            //processImpl.generateCsv(Constantes.C_CUSTOMERS, Constantes.PROV_CAX, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    @Scheduled(cron = "${cron.time.schedule}")
-    public void readInfoParts() {
-        try {
-            System.out.println("Reading Parts info");
-            ps.readFileInfo(Constantes.C_PARTS, "", null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    } */
 }

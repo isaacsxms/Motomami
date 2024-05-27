@@ -13,3 +13,5 @@ La aplicación expone dos puntos de entrada principales:
  y luego estos van siendo insertados en una tabla intermedia llamada interfaces.
 - `/processInfoFileIDS/{resource}/{codprov}/{date}/{id_interface}`: Este maneja los datos insertados en interfaces para realizar inserciones o actualizaciones en
  las tavlas maestras (customer, vehicle, parts)
+- `/generateCsv/{provider}/{date}`: Este endpoint genera un archivo CSV para cierto proveedor en 
+un cierto AÑO y MES, es decir si pasamos por date la siguiente fecha 2024-04-31 y codigo de proveedor CAX, nos generará un archivo MM_invoice_CAX_2024-04.csv con las rows pertenecientes a CAX con el año 2024, y mes entre 04-01 - 04-31

@@ -1,9 +1,13 @@
 package com.dam.tfg.MotoMammiApplicationIDS.services.implement;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -20,6 +24,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.Utils.Constantes;
 import com.dam.tfg.MotoMammiApplicationIDS.Utils.HibernateUtil;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.InvoiceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.PartsDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.ProviderDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
@@ -36,10 +41,14 @@ public class ProcessImpl implements ProcessService {
     @Value("${path.file.parts.name}")
     private String partsNameFile;
     @Value("${path.resources.input}")
-    private String resource;
+    private String inputPath;
     @Value("${system.username}")
     private String systemUsername;
-
+    @Value("${path.invoice.output}")
+    private String invoiceOutputPath;
+    @Value("${path.resources.output}")
+    private String outputPath;
+    
     private static int numLines = 0;
     private static int numInserted = 0;
     private static int numUpdated = 0;
@@ -123,9 +132,9 @@ public class ProcessImpl implements ProcessService {
         List<String> files = new ArrayList<>();
         for (ProviderDTO activeSource : activeSources) {
             String providerCode = activeSource.getProviderCode();
-            String findCustomersFile = resource + customersNameFile + providerCode + "_" + p_date + ".dat";
-            String findVehiclesFile = resource + vehiclesNameFile + providerCode + "_" + p_date + ".dat";
-            String findPartsFile = resource + partsNameFile + providerCode + "_" + p_date + ".dat";
+            String findCustomersFile = inputPath + customersNameFile + providerCode + "_" + p_date + ".dat";
+            String findVehiclesFile = inputPath + vehiclesNameFile + providerCode + "_" + p_date + ".dat";
+            String findPartsFile = inputPath + partsNameFile + providerCode + "_" + p_date + ".dat";
 
             files.add(findCustomersFile);
             files.add(findVehiclesFile);
@@ -372,8 +381,6 @@ public class ProcessImpl implements ProcessService {
                     e.printStackTrace();
                 }
                     try {
-                        System.out.println("DOES IT ENTER HERE?");
-
                         if (existingRecord != null && existingRecord.getResources().equals(p_source)) {
                             System.out.println("Interface exists!");
                             if (!existingRecord.getJsonContent().equals(jsonContent) ) {
@@ -413,11 +420,11 @@ public class ProcessImpl implements ProcessService {
 
     private String generateExternalCode(String p_prov, String dni) {
         switch (p_prov) {
-            case "CAX":
+            case Constantes.PROV_CAX:
                 return "C-" + dni + "-X";
-            case "SAN":
+            case Constantes.PROV_SAN:
                 return "S-" + dni + "-N";
-            case "ING":
+            case Constantes.PROV_ING:
                 return "I-" + dni + "-G";
             default:
                 return "";
@@ -598,6 +605,76 @@ public class ProcessImpl implements ProcessService {
             return internalCode;
         } catch(Exception e) {
             System.err.println(e.getMessage());
+        }
+        return "";
+    }
+
+
+    public String generateCsv(String p_prov, String p_date) {
+        // If date format is not like 2024-01-01, length wise it is not accepted
+        if (p_date.length() == 7) {
+            HibernateUtil.buildSessionFactory();
+            HibernateUtil.openSession();
+        
+            Session session = null;
+            Transaction transaction = null;
+    
+            try {
+                session = HibernateUtil.getCurrentSession();
+                transaction = session.beginTransaction();
+    
+                // Generate CSV file name
+                String csvFileName = outputPath + invoiceOutputPath + p_prov + "_" + p_date + ".csv";
+                
+                // Extract year and month from p_date
+                int year = Integer.parseInt(p_date.substring(0, 4));
+                int month = Integer.parseInt(p_date.substring(5, 7));
+                
+                // Fetch all invoices from the MM_INVOICES table for the specified month and year
+                List<InvoiceDTO> invoices = session.createQuery("FROM InvoiceDTO WHERE providerCode = :p_prov AND YEAR(dateEmitted) = :year AND MONTH(dateEmitted) = :month", InvoiceDTO.class)
+                .setParameter("p_prov", p_prov)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .list();
+
+                System.out.println("Invoices: " + invoices.toString());
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFileName))) {
+                    // Write header once
+                    writer.write("invoice_id,customer_name,amount,invoice_date");
+                    writer.newLine();
+                    
+                    for (InvoiceDTO invoice : invoices) {
+                        int invoiceId = invoice.getId();
+                        String customerName = invoice.getCompanyName();
+                        double amount = invoice.getPrice();
+                        String invoiceDate = invoice.getDateEmitted().toString();
+                        String invoiceData = String.format("%d,%s,%.2f,%s", invoiceId, customerName, amount, invoiceDate);
+        
+                        // Write each invoice data to the CSV file
+                        writer.write(invoiceData);
+                        writer.newLine();
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error writing CSV file: " + csvFileName + " -> " + e.getMessage());
+                }
+        
+                transaction.commit();
+            } catch (Exception e) {
+                if (transaction != null) {
+                    transaction.rollback();
+                }
+                String errorMsg = "Error generating CSV files: " + e.getMessage();
+                System.err.println(errorMsg);
+                return errorMsg;
+            } finally {
+                if (session != null) {
+                    session.close();
+                }
+            }
+        } else {
+            String message = "Length/format of date must be YYYY-MM";
+            System.err.println(message);
+            return message;
         }
         return "";
     }

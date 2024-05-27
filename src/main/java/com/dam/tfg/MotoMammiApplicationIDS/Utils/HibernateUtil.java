@@ -4,6 +4,7 @@ import com.dam.tfg.MotoMammiApplicationIDS.model.TranslationDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.VehicleDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.CustomerDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.InterfaceDTO;
+import com.dam.tfg.MotoMammiApplicationIDS.model.InvoiceDTO;
 import com.dam.tfg.MotoMammiApplicationIDS.model.PartsDTO;
 
 import org.hibernate.Session;
@@ -33,6 +34,7 @@ public class HibernateUtil {
         configuration.addAnnotatedClass(TranslationDTO.class);
         configuration.addAnnotatedClass(VehicleDTO.class);
         configuration.addAnnotatedClass(PartsDTO.class);
+        configuration.addAnnotatedClass(InvoiceDTO.class);
         
         ServiceRegistry sr = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(sr);
