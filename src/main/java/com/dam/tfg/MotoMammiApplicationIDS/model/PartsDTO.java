@@ -26,9 +26,6 @@ public class PartsDTO {
 
     @Column(name = "number_plate")
     private String numberPlate;
-
-    @Column(name = "id_invoice")
-    private int idInvoice;
     
     @Column(name = "dni_customer")
     private String dniCustomer;
@@ -65,14 +62,6 @@ public class PartsDTO {
         this.numberPlate = numberPlate;
     }
 
-    public int getIdInvoice() {
-        return idInvoice;
-    }
-
-    public void setIdInvoice(int idInvoice) {
-        this.idInvoice = idInvoice;
-    }
-
     public String getDniCustomer() {
         return dniCustomer;
     }
@@ -84,18 +73,17 @@ public class PartsDTO {
     public PartsDTO(){}
     
     public PartsDTO(int id, String description, Date dateNotified,
-    String numberPlate, int idInvoice, String dniCustomer) {
+    String numberPlate, String dniCustomer) {
         this.id = id;
         this.description = description;
         this.dateNotified = dateNotified;
         this.numberPlate = numberPlate;
-        this.idInvoice = idInvoice;
         this.dniCustomer = dniCustomer;
     }
 
     @Override
     public String toString() {
         return "PartsDTO [id=" + id + ", description=" + description + ", dateNotified=" + dateNotified + ", numberPlate="
-                + numberPlate + ", idInvoice=" + idInvoice + ", dniCustomer=" + dniCustomer + "]";
+                + numberPlate + ", dniCustomer=" + dniCustomer + "]";
     }
 }

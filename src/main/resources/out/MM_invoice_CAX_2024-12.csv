@@ -1,0 +1,2 @@
+invoice_id,date,customer_name,customer_surnames,customer_postal_code,company_name,company_address,vehicle_type,vehicle_brand,vehicle_plate_number,amount
+41,2024-12-25 00:00:00.0,Sheff,Ropking Clingan,5516,ING Group,BLING Sda. 789,Avenue,GMC,R 8588 WJSF,2000.00

@@ -1,0 +1,5 @@
+invoice_id,date,customer_name,customer_surnames,customer_postal_code,company_name,company_address,vehicle_type,vehicle_brand,vehicle_plate_number,amount
+19,2024-01-15 00:00:00.0,Erik,Ridings Demoge,9800-226,Caixa Corp,Caixa Street,Avenue,GMC,J 7770 VCPF,1000.00
+22,2024-01-18 00:00:00.0,iSAAaC,De Beauchemp Chudleigh,,Caixa Corp,Caixa Street,Street,Honda,D 8617 OUSG,1200.00
+25,2024-01-15 00:00:00.0,Erik,Ridings Demoge,9800-226,Caixa Corp,Caixa Street. 123,Avenue,GMC,J 7770 VCPF,1000.00
+28,2024-01-18 00:00:00.0,iSAAaC,De Beauchemp Chudleigh,,Caixa Corp,Caixa Street. 456,Street,Honda,D 8617 OUSG,1200.00

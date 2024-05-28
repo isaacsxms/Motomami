@@ -40,8 +40,6 @@ public class ProcessImpl implements ProcessService {
     private String partsNameFile;
     @Value("${path.resources.input}")
     private String inputPath;
-    @Value("${system.username}")
-    private String systemUsername;
     @Value("${path.invoice.output}")
     private String invoiceOutputPath;
     @Value("${path.resources.output}")
@@ -53,7 +51,7 @@ public class ProcessImpl implements ProcessService {
     private static int numErrors = 0;
 
     @Override
-    public HashMap<String, Integer> readFileInfo(String p_source, String p_prov, String p_date) {
+    public HashMap<String, Integer> readFileInfo(String p_source, String p_prov, String p_date, String updateCreateBy) {
         HashMap<String, Integer> statistics = new HashMap<>();
         numLines = 0;
         numInserted = 0;
@@ -81,15 +79,15 @@ public class ProcessImpl implements ProcessService {
             case Constantes.C_CUSTOMERS:
                 System.out.println("Enters customer switch!");
                 List<CustomerDTO> customerList = processCustomerFiles(files.get(0), statistics);
-                processCustomerData(customerList, p_prov, p_source, statistics, session);
+                processCustomerData(customerList, p_prov, p_source, statistics, session, updateCreateBy);
                 break;
             case Constantes.C_VEHICLES:
                 List<VehicleDTO> vehicleList = processVehicleFiles(files.get(1), statistics);
-                processVehicleData(vehicleList, p_prov, p_source, statistics, session);
+                processVehicleData(vehicleList, p_prov, p_source, statistics, session, updateCreateBy);
                 break;
             case Constantes.C_PARTS:
                 List<PartsDTO> partsList = processPartsFiles(files.get(2), statistics);
-                processPartsData(partsList, p_prov, p_source, statistics, session);
+                processPartsData(partsList, p_prov, p_source, statistics, session, updateCreateBy);
                 System.out.println(partsList.toString());
             default:
                 break;
@@ -255,8 +253,7 @@ public class ProcessImpl implements ProcessService {
             String[] partsData = line.split(";");
             Date dateNotified = dateFormat.parse(partsData[1]);
 
-            return new PartsDTO(0, partsData[0], dateNotified, partsData[2], Integer.parseInt(partsData[3]),
-                    partsData[4]);
+            return new PartsDTO(0, partsData[0], dateNotified, partsData[2], partsData[4]);
         } catch (Exception e) {
             System.err.println("ERROR: Parsing Parts " + e.getMessage());
         }
@@ -264,7 +261,7 @@ public class ProcessImpl implements ProcessService {
     }
 
     private void processVehicleData(List<VehicleDTO> vehicleList, String p_prov, String p_source,
-            HashMap<String, Integer> statistics, Session session) {
+            HashMap<String, Integer> statistics, Session session, String updateCreateBy) {
         for (VehicleDTO vehicle : vehicleList) {
             String jsonContent = new Gson().toJson(vehicle);
 
@@ -282,7 +279,7 @@ public class ProcessImpl implements ProcessService {
                     if (!existingRecord.getJsonContent().equals(jsonContent)) {
                         System.out.println("Entered! to update");
                         existingRecord.setJsonContent(jsonContent);
-                        existingRecord.setUpdatedBy(systemUsername);
+                        existingRecord.setUpdatedBy(updateCreateBy);
                         existingRecord.setOperation(Constantes.OPR_UPDATE);
                         session.update(existingRecord);
                         numUpdated++;
@@ -297,7 +294,7 @@ public class ProcessImpl implements ProcessService {
                     newInterface.setLastUpdated(new Date());
                     newInterface.setStatusProcess('N'); // STATUS N TILL IT IS SUCCESFULLY INSERTED INTO CUS, VEH or PRT
                     newInterface.setOperation(Constantes.OPR_NEW);
-                    newInterface.setCreatedBy(systemUsername);
+                    newInterface.setCreatedBy(updateCreateBy);
                     newInterface.setProviderCode(p_prov);
                     newInterface.setResources(p_source);
                     session.save(newInterface);
@@ -314,7 +311,7 @@ public class ProcessImpl implements ProcessService {
     }
 
     private void processCustomerData(List<CustomerDTO> customerList, String p_prov, String p_source,
-            HashMap<String, Integer> statistics, Session session) {
+            HashMap<String, Integer> statistics, Session session, String updateCreateBy) {
         for (CustomerDTO customer : customerList) {
             String jsonContent = new Gson().toJson(customer);
 
@@ -335,7 +332,7 @@ public class ProcessImpl implements ProcessService {
                     if (!existingRecord.getJsonContent().equals(jsonContent)) {
                         System.out.println("Record update: " + existingRecord);
                         existingRecord.setJsonContent(jsonContent);
-                        existingRecord.setUpdatedBy(systemUsername);
+                        existingRecord.setUpdatedBy(updateCreateBy);
                         existingRecord.setOperation(Constantes.OPR_UPDATE);
                         session.update(existingRecord);
                         numUpdated++;
@@ -353,7 +350,7 @@ public class ProcessImpl implements ProcessService {
                     newInterface.setLastUpdated(new Date());
                     newInterface.setStatusProcess('N'); // STATUS N TILL IT IS SUCCESFULLY INSERTED INTO CUS, VEH or PRT
                     newInterface.setOperation(Constantes.OPR_NEW);
-                    newInterface.setCreatedBy(systemUsername);
+                    newInterface.setCreatedBy(updateCreateBy);
                     newInterface.setProviderCode(p_prov);
                     newInterface.setResources(p_source);
                     session.save(newInterface);
@@ -369,7 +366,7 @@ public class ProcessImpl implements ProcessService {
     }
 
     private void processPartsData(List<PartsDTO> partsList, String p_prov, String p_source,
-            HashMap<String, Integer> statistics, Session session) {
+            HashMap<String, Integer> statistics, Session session, String updateCreateBy) {
         for (PartsDTO part : partsList) {
             String jsonContent = new Gson().toJson(part);
 
@@ -391,7 +388,7 @@ public class ProcessImpl implements ProcessService {
                     if (!existingRecord.getJsonContent().equals(jsonContent)) {
                         System.out.println("Entered! to update");
                         existingRecord.setJsonContent(jsonContent);
-                        existingRecord.setUpdatedBy(systemUsername);
+                        existingRecord.setUpdatedBy(updateCreateBy);
                         existingRecord.setOperation(Constantes.OPR_UPDATE);
                         session.update(existingRecord);
                         numUpdated++;
@@ -407,7 +404,7 @@ public class ProcessImpl implements ProcessService {
                     newInterface.setLastUpdated(new Date());
                     newInterface.setStatusProcess('N'); // STATUS N TILL IT IS SUCCESFULLY INSERTED INTO CUS, VEH or PRT
                     newInterface.setOperation(Constantes.OPR_NEW);
-                    newInterface.setCreatedBy(systemUsername);
+                    newInterface.setCreatedBy(updateCreateBy);
                     newInterface.setProviderCode(p_prov);
                     newInterface.setResources(p_source);
                     session.save(newInterface);
@@ -465,13 +462,17 @@ public class ProcessImpl implements ProcessService {
                         integrateParts(obj, session, p_date);
                         break;
                     default:
-                        System.out.println("Unknown resource type");
-                        break;
+                    System.out.println("Unknown resource type");
+                    obj.setStatusProcess('E');
+                    obj.setErrorCode(Constantes.ERR_CODE_UNKNOWN_RESOURCE);
+                    obj.setErrorMessage("Unknown resource type: " + obj.getResources());
+                    session.update(obj);
+                    continue;
                 }
             } catch (Exception e) {
                 System.err.println("Error processing InterfaceDTO: " + e.getMessage());
-                e.printStackTrace();
                 obj.setStatusProcess('E');
+                obj.setErrorCode(Constantes.ERR_CODE_INSERT);
                 obj.setErrorMessage(e.getMessage());
                 session.update(obj);
                 transaction.rollback();
@@ -524,11 +525,13 @@ public class ProcessImpl implements ProcessService {
                 obj.setErrorMessage(
                         "Customer with DNI " + newVehicle.getDni() + " does not exist. Skipping vehicle insertion.");
                 obj.setStatusProcess('E');
+                obj.setErrorCode(Constantes.ERR_CODE_INSERT);
             }
         } catch (Exception e) {
             System.err.println("Error saving VehicleDTO: " + e.getMessage());
             obj.setErrorMessage("Error saving VehicleDTO: " + e.getMessage());
             obj.setStatusProcess('E');
+            obj.setErrorCode(Constantes.ERR_CODE_DATABASE);
         }
         session.update(obj);
     }
@@ -538,28 +541,22 @@ public class ProcessImpl implements ProcessService {
         System.out.println("Enters parts integrate case");
         PartsDTO newPart = new Gson().fromJson(obj.getJsonContent(), PartsDTO.class);
         System.out.println(newPart.toString());
-
+    
         Transaction transaction = null;
         try {
-            // Check if there's an active transaction and commit/rollback if necessary
-            if (session.getTransaction() != null && session.getTransaction().isActive()) {
-                session.getTransaction().rollback();
-                System.err.println("Rolled back an active transaction before starting a new one.");
-            }
-
             transaction = session.beginTransaction();
-
+    
             // Check if the customer exists
             CustomerDTO existingCustomer = session.createQuery("FROM CustomerDTO WHERE dni = :dni", CustomerDTO.class)
                     .setParameter("dni", newPart.getDniCustomer())
                     .uniqueResult();
-
+    
             // Check if the vehicle exists
             VehicleDTO existingVehicle = session
                     .createQuery("FROM VehicleDTO WHERE plateNumber = :plateNumber", VehicleDTO.class)
                     .setParameter("plateNumber", newPart.getNumberPlate())
                     .uniqueResult();
-
+    
             if (existingCustomer != null && existingVehicle != null) {
                 System.out.println("Customer and vehicle exist!");
                 session.save(newPart); // Save the new part to MM_PARTS table
@@ -570,10 +567,13 @@ public class ProcessImpl implements ProcessService {
                 System.err.println(missingEntity + " Skipping part insertion.");
                 obj.setErrorMessage(missingEntity + " Skipping part insertion.");
                 obj.setOperation(Constantes.OPR_UPDATE);
+                obj.setErrorCode(Constantes.ERR_CODE_INSERT);
                 obj.setStatusProcess('E');
             }
-
+    
             transaction.commit();
+            session.update(obj); // Update InterfaceDTO status after successful commit
+            System.out.println("InterfaceDTO updated successfully.");
         } catch (Exception e) {
             if (transaction != null && transaction.isActive()) {
                 transaction.rollback();
@@ -582,13 +582,6 @@ public class ProcessImpl implements ProcessService {
             System.err.println("Error saving PartsDTO: " + e.getMessage());
             obj.setErrorMessage("Error saving PartsDTO: " + e.getMessage());
             obj.setStatusProcess('E');
-        } finally {
-            try {
-                session.update(obj);
-                System.out.println("InterfaceDTO updated successfully.");
-            } catch (Exception e) {
-                System.err.println("Error updating InterfaceDTO: " + e.getMessage());
-            }
         }
     }
 
@@ -650,7 +643,7 @@ public class ProcessImpl implements ProcessService {
                 System.out.println("Invoices: " + invoices.toString());
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFileName))) {
                     // Write header once
-                    writer.write("invoice_id,customer_name,customer_surnames,company_name,vehicle_type,vehicle_brand,vehicle_plate_number,amount,invoice_date");
+                    writer.write("invoice_id,date,customer_name,customer_surnames,customer_postal_code,company_name,company_address,vehicle_type,vehicle_brand,vehicle_plate_number,amount");
                     writer.newLine();
     
                     for (InvoiceDTO invoice : invoices) {
@@ -689,10 +682,11 @@ public class ProcessImpl implements ProcessService {
                         String customerName = existingCustomer.getName();
                         String customerSurname = existingCustomer.getFirstSurname() + " " + existingCustomer.getSecondSurname();
                         String companyName = invoice.getCompanyName();
+                        String companyAddress = invoice.getCompanyAddress();
+                        String customerPostalCode = existingCustomer.getPostalCode();
                         double amount = invoice.getPrice();
                         String invoiceDate = invoice.getDateEmitted().toString();
-                        String invoiceData = String.format("%d,%s,%s,%s,%s,%s,%s,%.2f,%s", invoiceId, customerName, customerSurname, companyName, vehicleType, vehicleBrand, vehiclePlateNumber, amount, invoiceDate);
-    
+                        String invoiceData = String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.2f", invoiceId, invoiceDate, customerName, customerSurname, customerPostalCode, companyName, companyAddress, vehicleType, vehicleBrand, vehiclePlateNumber, amount);
                         // Write each invoice data to the CSV file
                         writer.write(invoiceData);
                         writer.newLine();

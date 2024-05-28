@@ -123,9 +123,9 @@ FOREIGN KEY (cod_prov) REFERENCES MM_PROVIDERS(cod_prov)
 );
 
 INSERT INTO MM_INVOICES (cod_prov, dni_customer, date_emitted, company_name, company_cif, company_address, price, iva) VALUES
-('CAX', 'X7035305P', '2024-01-15', 'Caixa Corp', 'CAX123456', 'Caixa Street, 123', 1000.50, 21),
-('SAN', 'C9276327V', '2024-02-20', 'Santander Corp', 'SAN987654', 'Santander Avenue, 456', 1500.75, 21),
-('ING', 'H2796910B', '2024-03-25', 'ING Group', 'ING789123', 'ING Road, 789', 2000.00, 21),
-('CAX', 'S8087974R', '2024-01-18', 'Caixa Corp', 'CAX654321', 'Caixa Street, 456', 1200.60, 21),
-('SAN', 'F4120976A', '2024-02-22', 'Santander Corp', 'SAN123789', 'Santander Avenue, 789', 1700.85, 21),
-('ING', 'B7069097H', '2024-03-28', 'ING Group', 'ING321654', 'ING Road, 123', 2200.10, 21);
+('CAX', 'X7035305P', '2024-01-15', 'Caixa Corp', 'CAX123456', 'Caixa Street. 123', 1000.50, 21),
+('SAN', 'C9276327V', '2024-02-20', 'Santander Corp', 'SAN987654', 'Santander Avenue. 456', 1500.75, 21),
+('ING', 'H2796910B', '2024-03-25', 'ING Group', 'ING789123', 'ING Road. 789', 2000.00, 21),
+('CAX', 'S8087974R', '2024-01-18', 'Caixa Corp', 'CAX654321', 'Caixa Street. 456', 1200.60, 21),
+('SAN', 'F4120976A', '2024-02-22', 'Santander Corp', 'SAN123789', 'Santander Avenue. 789', 1700.85, 21),
+('ING', 'B7069097H', '2024-03-28', 'ING Group', 'ING321654', 'ING Road. 123', 2200.10, 21);

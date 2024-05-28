@@ -1,0 +1,6 @@
+invoice_id,date,customer_name,customer_surnames,customer_postal_code,company_name,company_address,vehicle_type,vehicle_brand,vehicle_plate_number,amount
+21,2024-03-25 00:00:00.0,Murvyn,Bynold Savile,,ING Group,ING Road,Alley,Oldsmobile,F 4021 UMGD,2000.00
+24,2024-03-28 00:00:00.0,Cornell,Temby Barzen,91030,ING Group,ING Road,AllDey,Plymouth,V 0898 RBMY,2200.00
+27,2024-03-25 00:00:00.0,Murvyn,Bynold Savile,,ING Group,ING Road. 789,Alley,Oldsmobile,F 4021 UMGD,2000.00
+30,2024-03-28 00:00:00.0,Cornell,Temby Barzen,91030,ING Group,ING Road. 123,AllDey,Plymouth,V 0898 RBMY,2200.00
+31,2024-03-25 00:00:00.0,Sheff,Ropking Clingan,5516,ING Group,BLING Sda. 789,Avenue,GMC,R 8588 WJSF,2000.00

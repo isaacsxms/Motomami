@@ -3,6 +3,7 @@ package com.dam.tfg.MotoMammiApplicationIDS.Controllers;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -11,10 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dam.tfg.MotoMammiApplicationIDS.services.ProcessService;
 
 @RestController
-public class T_Controller {
+public class MotomamiController {
     @Autowired
     ProcessService pService;
 
+    @Value("${executed.by.controller}")
+    private String exeController;
+    
     @RequestMapping(value = ("/readInfoFileIDS/{resource}/{codprov}/{date}"), method = RequestMethod.GET, produces = "application/json")
     HashMap<String, Integer> callProcessReadInfo(@PathVariable String resource,
             @PathVariable String codprov,
@@ -24,7 +28,7 @@ public class T_Controller {
                     "Provider code: " + codprov + "\n" +
                     "Date: " + date);
 
-            return pService.readFileInfo(resource, codprov, date);
+            return pService.readFileInfo(resource, codprov, date, exeController);
 
         } catch (Exception e) {
             System.err.println("ERROR: File processing into DTO's endpoint failed! \n" + e.getMessage());

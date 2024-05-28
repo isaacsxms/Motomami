@@ -14,4 +14,9 @@ public class Constantes {
     public static final String PROV_CAX = "CAX";
     public static final String PROV_SAN = "SAN";
     public static final String PROV_ING = "ING";
+
+    // ERROR CODES
+    public static final String ERR_CODE_DATABASE = "DB_ERR";
+    public static final String ERR_CODE_INSERT = "DB_ERR";
+    public static final String ERR_CODE_UNKNOWN_RESOURCE = "UNKNOWN_RES_ERR";
 }

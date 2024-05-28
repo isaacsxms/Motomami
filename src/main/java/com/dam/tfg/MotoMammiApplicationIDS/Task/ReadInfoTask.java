@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +19,13 @@ public class ReadInfoTask {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     //Date p_Date = new Date(124-3-30);
     
+    @Value("${executed.by.system}")
+    private String exeSystem;
+
     @Scheduled(cron = "${cron.task.customer}")
     public void readInfoCustomers() {
         try {
-            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
+            processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null, exeSystem);
         } catch (Exception e) {
             e.printStackTrace();
         }
