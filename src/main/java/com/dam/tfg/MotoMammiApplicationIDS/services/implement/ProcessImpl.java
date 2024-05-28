@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -57,6 +55,10 @@ public class ProcessImpl implements ProcessService {
     @Override
     public HashMap<String, Integer> readFileInfo(String p_source, String p_prov, String p_date) {
         HashMap<String, Integer> statistics = new HashMap<>();
+        numLines = 0;
+        numInserted = 0;
+        numUpdated = 0;
+        numErrors = 0;
         HibernateUtil.buildSessionFactory();
         HibernateUtil.openSession();
 
@@ -470,6 +472,7 @@ public class ProcessImpl implements ProcessService {
                 System.err.println("Error processing InterfaceDTO: " + e.getMessage());
                 e.printStackTrace();
                 obj.setStatusProcess('E');
+                obj.setErrorMessage(e.getMessage());
                 session.update(obj);
                 transaction.rollback();
                 session.clear();
@@ -620,23 +623,22 @@ public class ProcessImpl implements ProcessService {
         if (p_date.length() == 7) {
             HibernateUtil.buildSessionFactory();
             HibernateUtil.openSession();
-
+    
             Session session = null;
             Transaction transaction = null;
-
+    
             try {
                 session = HibernateUtil.getCurrentSession();
                 transaction = session.beginTransaction();
-
+    
                 // Generate CSV file name
                 String csvFileName = outputPath + invoiceOutputPath + p_prov + "_" + p_date + ".csv";
-
+    
                 // Extract year and month from p_date
                 int year = Integer.parseInt(p_date.substring(0, 4));
                 int month = Integer.parseInt(p_date.substring(5, 7));
-
-                // Fetch all invoices from the MM_INVOICES table for the specified month and
-                // year
+    
+                // Fetch all invoices from the MM_INVOICES table for the specified month and year
                 List<InvoiceDTO> invoices = session.createQuery(
                         "FROM InvoiceDTO WHERE providerCode = :p_prov AND YEAR(dateEmitted) = :year AND MONTH(dateEmitted) = :month",
                         InvoiceDTO.class)
@@ -644,21 +646,53 @@ public class ProcessImpl implements ProcessService {
                         .setParameter("year", year)
                         .setParameter("month", month)
                         .list();
-
+    
                 System.out.println("Invoices: " + invoices.toString());
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFileName))) {
                     // Write header once
-                    writer.write("invoice_id,customer_name,amount,invoice_date");
+                    writer.write("invoice_id,customer_name,customer_surnames,company_name,vehicle_type,vehicle_brand,vehicle_plate_number,amount,invoice_date");
                     writer.newLine();
-
+    
                     for (InvoiceDTO invoice : invoices) {
+                        CustomerDTO existingCustomer = null;
+                        VehicleDTO existingVehicles = null;
+                        try {
+                            existingCustomer = session.createQuery("FROM CustomerDTO WHERE dni = :dni", CustomerDTO.class)
+                                    .setParameter("dni", invoice.getDni())
+                                    .uniqueResult();
+                            existingVehicles = session.createQuery("FROM VehicleDTO WHERE dni = :dni", VehicleDTO.class)
+                            .setParameter("dni", invoice.getDni())
+                            .uniqueResult();
+                        } catch (Exception e) {
+                            System.err.println("ERROR: " + e.getMessage());
+                        }
+                        System.out.println("Customer: " + existingCustomer);
+
+                        String vehicleType = null;
+                        String vehicleBrand = null;
+                        String vehiclePlateNumber = null;
+                        if (existingVehicles != null) {
+                            vehicleType = existingVehicles.getVehicleType();
+                            vehicleBrand = existingVehicles.getBrand();
+                            vehiclePlateNumber = existingVehicles.getPlateNumber();
+                        }
+                        else {
+                            System.err.println("No vehicle data found, related to customer dni");
+                            break; 
+                            /*  
+                            We break since the invoiceData will insert nulls into the csv if we go on with the method
+                            and we do not want to get a csv that's not full of data 
+                            */
+                        }
+
                         int invoiceId = invoice.getId();
-                        String customerName = invoice.getCompanyName();
+                        String customerName = existingCustomer.getName();
+                        String customerSurname = existingCustomer.getFirstSurname() + " " + existingCustomer.getSecondSurname();
+                        String companyName = invoice.getCompanyName();
                         double amount = invoice.getPrice();
                         String invoiceDate = invoice.getDateEmitted().toString();
-                        String invoiceData = String.format("%d,%s,%.2f,%s", invoiceId, customerName, amount,
-                                invoiceDate);
-
+                        String invoiceData = String.format("%d,%s,%s,%s,%s,%s,%s,%.2f,%s", invoiceId, customerName, customerSurname, companyName, vehicleType, vehicleBrand, vehiclePlateNumber, amount, invoiceDate);
+    
                         // Write each invoice data to the CSV file
                         writer.write(invoiceData);
                         writer.newLine();
@@ -666,7 +700,7 @@ public class ProcessImpl implements ProcessService {
                 } catch (IOException e) {
                     System.err.println("Error writing CSV file: " + csvFileName + " -> " + e.getMessage());
                 }
-
+    
                 transaction.commit();
             } catch (Exception e) {
                 if (transaction != null) {
@@ -687,4 +721,5 @@ public class ProcessImpl implements ProcessService {
         }
         return "";
     }
+    
 }

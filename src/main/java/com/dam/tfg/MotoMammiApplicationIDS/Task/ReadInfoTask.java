@@ -18,25 +18,62 @@ public class ReadInfoTask {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     //Date p_Date = new Date(124-3-30);
     
-    @Scheduled(cron = "${cron.time.schedule}")
+    @Scheduled(cron = "${cron.task.customer}")
     public void readInfoCustomers() {
         try {
-            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, "CAX", null);
+            //processImpl.readFileInfo(Constantes.C_CUSTOMERS, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Scheduled(cron = "${cron.time.schedule}")
-    public void processInfo() {
+    @Scheduled(cron = "${cron.task.vehicles}")
+    public void readInfoVehicles() {
         try {
-            //processImpl.integrateInfo(Constantes.PROV_CAX, null, null, null);
+            //processImpl.readFileInfo(Constantes.C_VEHICLES, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Scheduled(cron = "${cron.time.schedule}")
+    @Scheduled(cron = "${cron.task.parts}")
+    public void readInfoParts() {
+        try {
+            //processImpl.readFileInfo(Constantes.C_PARTS, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Scheduled(cron = "${cron.task.integrate.customer}")
+    public void processInfoCustomers() {
+        try {
+            //processImpl.integrateInfo(Constantes.C_CUSTOMERS, null, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Scheduled(cron = "${cron.task.integrate.vehicles}")
+    public void processInfoVehicles() {
+        try {
+            //processImpl.integrateInfo(Constantes.C_VEHICLES, null, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Scheduled(cron = "${cron.task.integrate.parts}")
+    public void processInfoParts() {
+        try {
+            //processImpl.integrateInfo(Constantes.C_PARTS, null, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Every month
+    @Scheduled(cron = "${cron.task.generate.invoice}")
     public void generateInvoice() {
         try {
             //processImpl.generateCsv(Constantes.C_CUSTOMERS, Constantes.PROV_CAX, null);
