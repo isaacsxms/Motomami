@@ -267,8 +267,10 @@ public class ProcessImpl implements ProcessService {
 
             InterfaceDTO existingRecord = null;
             try {
-                existingRecord = session.createQuery("FROM InterfaceDTO WHERE internalCode = :dni", InterfaceDTO.class)
+                existingRecord = session.createQuery("FROM InterfaceDTO WHERE internalCode = :dni AND resources = :p_source AND providerCode = :p_prov", InterfaceDTO.class)
                         .setParameter("dni", vehicle.getDni())
+                        .setParameter("p_prov", p_prov)
+                        .setParameter("p_source", p_source)
                         .uniqueResult();
             } catch (Exception e) {
                 e.printStackTrace();
