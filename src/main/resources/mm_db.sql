@@ -99,7 +99,7 @@ CREATE TABLE MM_VEHICLE(
 
 CREATE TABLE MM_PARTS(
 id int AUTO_INCREMENT PRIMARY KEY,
-`description` varchar(100),
+`description` varchar(500),
 date_notified date,
 number_plate varchar(100),
 id_invoice varchar(100),
