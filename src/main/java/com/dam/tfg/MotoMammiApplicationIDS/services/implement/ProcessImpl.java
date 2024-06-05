@@ -544,10 +544,7 @@ public class ProcessImpl implements ProcessService {
         PartsDTO newPart = new Gson().fromJson(obj.getJsonContent(), PartsDTO.class);
         System.out.println(newPart.toString());
     
-        Transaction transaction = null;
-        try {
-            transaction = session.beginTransaction();
-    
+        try{
             // Check if the customer exists
             CustomerDTO existingCustomer = session.createQuery("FROM CustomerDTO WHERE dni = :dni", CustomerDTO.class)
                     .setParameter("dni", newPart.getDniCustomer())
@@ -573,18 +570,13 @@ public class ProcessImpl implements ProcessService {
                 obj.setStatusProcess('E');
             }
     
-            transaction.commit();
-            session.update(obj); // Update InterfaceDTO status after successful commit
             System.out.println("InterfaceDTO updated successfully.");
         } catch (Exception e) {
-            if (transaction != null && transaction.isActive()) {
-                transaction.rollback();
-                System.err.println("Transaction rolled back due to an error.");
-            }
             System.err.println("Error saving PartsDTO: " + e.getMessage());
             obj.setErrorMessage("Error saving PartsDTO: " + e.getMessage());
             obj.setStatusProcess('E');
         }
+        session.update(obj); // Update InterfaceDTO status after successful commit
     }
 
     private String getTranslation(String providerCode, String externalCode, String p_date, Session session) {
